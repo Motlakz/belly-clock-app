@@ -8,7 +8,7 @@ interface SuggestionsModalProps {
 }
 
 const SuggestionsModal: React.FC<SuggestionsModalProps> = ({ isOpen, onClose, generateSuggestions }) => {
-    const [showModal, setShowModal] = useState(true);
+    const [showModal, setShowModal] = useState(false);
     const [suggestions, setSuggestions] = useState<string[]>([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -57,7 +57,7 @@ const SuggestionsModal: React.FC<SuggestionsModalProps> = ({ isOpen, onClose, ge
                         {loading && (
                             <div className="mb-4">
                                 <p>Loading suggestions...</p>
-                                <div className="mt-2 w-8 h-8 border-t-2 border-b-2 border-purple-500 rounded-full animate-spin"></div>
+                                <div className="mt-2 w-8 h-8 border-4 border-t-cyan-400 border-r-pink-400 border-b-orange-400 border-l-purple-500 rounded-full animate-spin"></div>
                             </div>
                         )}
                         {error && (

@@ -24,8 +24,14 @@ export async function generateFastingSuggestions(
 ): Promise<string[]> {
   const basicSuggestions = generateBasicSuggestions(profile, history, currentFastingType);
   const geminiSuggestions = await getGeminiSuggestions(profile, history, currentFastingType);
-  
-  return [...new Set([...basicSuggestions, ...geminiSuggestions])];
+
+  const prioritizedSuggestions = [
+    ...geminiSuggestions,
+    ...basicSuggestions.slice(0, 2),
+    ...basicSuggestions.slice(2)
+  ];
+
+  return [...new Set(prioritizedSuggestions)];
 }
 
 function generateBasicSuggestions(

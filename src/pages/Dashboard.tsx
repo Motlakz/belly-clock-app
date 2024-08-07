@@ -18,7 +18,7 @@ interface DashboardPageProps {
 }
 
 const DashboardPage: React.FC<DashboardPageProps> = () => {
-    const [isSuggestionsModalOpen, setIsSuggestionsModalOpen] = useState(true);
+    const [isSuggestionsModalOpen, setIsSuggestionsModalOpen] = useState(false);
     const { user } = useUser();
 
     const generateSuggestions = useCallback(async () => {

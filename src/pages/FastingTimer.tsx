@@ -139,8 +139,8 @@ const FastingTimer: React.FC<FastingTimerProps> = ({ userId, onFastingSessionEnd
             await setDoc(preferencesRef, {
                 preferredMethod,
                 customFastingWindow,
-                reminderFrequency: 60, // or whatever value you're using
-            }, { merge: true }); // Use merge to update existing fields without overwriting the entire document
+                reminderFrequency: 60,
+            }, { merge: true }); 
 
             console.log('Fasting preferences updated successfully');
         } catch (error) {
@@ -204,7 +204,7 @@ const FastingTimer: React.FC<FastingTimerProps> = ({ userId, onFastingSessionEnd
                 className="max-w-md w-full bg-white bg-opacity-20 backdrop-blur-lg rounded-xl shadow-lg p-8 border border-white border-opacity-30"
             >
                 <motion.h2 
-                    className="text-3xl font-bold mb-6 text-center text-white"
+                    className="text-3xl font-bold mb-6 text-center text-slate-700"
                     initial={{ y: -20 }}
                     animate={{ y: 0 }}
                     transition={{ delay: 0.2, type: "spring", stiffness: 120 }}
