@@ -1,21 +1,23 @@
-import { useState, useEffect, ChangeEvent, FormEvent } from "react";
-import { useUser } from "@clerk/clerk-react"; // Import useUser from Clerk
+import React, { useState, useEffect, ChangeEvent, FormEvent } from "react";
+import { useUser } from "@clerk/clerk-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { GiPerson, GiSandsOfTime, GiWaterDrop, GiChart, GiPadlock } from "react-icons/gi";
 import { FaBell, FaEdit, FaEnvelope, FaSmile, FaTrash, FaUserEdit } from "react-icons/fa";
 import CustomSelect from "../components/CustomSelect";
-import { fastingTypes } from "../lib/fastingMethods";
+import { fastingTypes, FastingType } from "../lib/fastingMethods";
 import CommunitySection from "../components/CommunitySection";
 import AdvancedSection from "../components/AdvancedSection";
 import { SubscriptionCard } from "../components/SubscriptionCard";
 import { doc, getDoc, setDoc } from "firebase/firestore";
 import { db } from "../firebase";
+import { generateFastingSuggestions, UserProfile, FastingHistory } from "../lib/fastingSuggestions";
+import MotionSelect from "../components/MotionSelect";
 
 interface ProfileFormProps {
     userId: string;
 }
 
-interface UserProfile {
+interface ExtendedUserProfile extends UserProfile {
     name?: string;
     email?: string;
     preferredMethod?: string;
@@ -33,39 +35,65 @@ interface UserProfile {
 const MotionInput = motion.input;
 
 export const ProfileForm: React.FC<ProfileFormProps> = ({ userId }) => {
-    const { user } = useUser(); // Get user data from Clerk
-    const [profile, setProfile] = useState<UserProfile>({
-        name: user?.fullName || '', // Use Clerk's user data
-        email: user?.emailAddresses[0]?.emailAddress || '', // Use Clerk's user data
+    const { user } = useUser();
+    const [profile, setProfile] = useState<ExtendedUserProfile>({
+        name: user?.fullName || '',
+        email: user?.emailAddresses[0]?.emailAddress || '',
         subscriptionTier: 'free',
+        age: 0,
+        weight: 0,
+        height: 0,
+        gender: 'other',
+        activityLevel: 'sedentary',
+        healthConditions: [],
     });
     const [activeTab, setActiveTab] = useState("general");
-    const [selectedFastingType, setSelectedFastingType] = useState(fastingTypes[0]);
+    const [selectedFastingType, setSelectedFastingType] = useState<FastingType>(fastingTypes[0]);
     const [editMode, setEditMode] = useState<string | null>(null);
+    const [fastingHistory, setFastingHistory] = useState<FastingHistory>({
+        completedFasts: 0,
+        averageFastDuration: 0,
+        longestFast: 0,
+        consistency: 0,
+    });
 
     useEffect(() => {
-        const fetchProfile = async () => {
+        const fetchProfileAndHistory = async () => {
             if (userId) {
-                const docRef = doc(db, "users", userId);
-                const docSnap = await getDoc(docRef);
-                if (docSnap.exists()) {
+                const userDocRef = doc(db, "users", userId);
+                const userDocSnap = await getDoc(userDocRef);
+                if (userDocSnap.exists()) {
                     setProfile((prevProfile) => ({
                         ...prevProfile,
-                        ...docSnap.data() // Merge Firestore data with Clerk data
+                        ...userDocSnap.data()
                     }));
-                } else {
-                    console.log("No such document!");
+                }
+
+                const historyDocRef = doc(db, "fastingHistory", userId);
+                const historyDocSnap = await getDoc(historyDocRef);
+                if (historyDocSnap.exists()) {
+                    setFastingHistory(historyDocSnap.data() as FastingHistory);
                 }
             }
         };
-        fetchProfile();
+        fetchProfileAndHistory();
     }, [userId]);
+
+    useEffect(() => {
+        const fetchSuggestions = async () => {
+            const newSuggestions = await generateFastingSuggestions(profile, fastingHistory, selectedFastingType);
+            // Here you would typically update some state or call a function to handle the new suggestions
+            // For now, we'll just log them
+            console.log("New suggestions:", newSuggestions);
+        };
+        fetchSuggestions();
+    }, [profile, fastingHistory, selectedFastingType]);
 
     const handleSubmit = async (e: FormEvent) => {
         e.preventDefault();
         if (userId) {
             const docRef = doc(db, "users", userId);
-            await setDoc(docRef, profile, { merge: true }); // Merge to update the profile
+            await setDoc(docRef, profile, { merge: true });
             alert("Profile updated successfully!");
         }
     };
@@ -92,7 +120,7 @@ export const ProfileForm: React.FC<ProfileFormProps> = ({ userId }) => {
     const handleDeleteAccount = async () => {
         const confirmed = confirm("Are you sure you want to delete your account? This action cannot be undone.");
         if (confirmed) {
-            // Omit backend logic for now
+            // Implement account deletion logic here
             alert("Account deleted successfully!");
         }
     };
@@ -124,7 +152,7 @@ export const ProfileForm: React.FC<ProfileFormProps> = ({ userId }) => {
             </motion.h2>
 
             <div className="flex mb-6 space-x-2 justify-center">
-                {["general", "fasting", "tracking", "community", "advanced", "subscription"].map((tab) => (
+                {["general", "health", "fasting", "tracking", "community", "advanced", "subscription"].map((tab) => (
                     <motion.button
                         key={tab}
                         onClick={() => setActiveTab(tab)}
@@ -231,6 +259,94 @@ export const ProfileForm: React.FC<ProfileFormProps> = ({ userId }) => {
                                     <FaTrash className="mr-2" />
                                     Delete Account
                                 </motion.button>
+                            </div>
+                        </div>
+                    )}
+                </motion.div>
+
+                <motion.div
+                    variants={contentVariants}
+                    initial="hidden"
+                    animate={activeTab === "health" ? "visible" : "hidden"}
+                >
+                    {activeTab === "health" && (
+                        <div className="bg-orange-50 p-6 rounded-lg shadow-lg">
+                            <div className="flex items-center space-x-4 mb-6">
+                                <GiPerson className="text-orange-500 text-3xl" />
+                                <h3 className="text-2xl font-semibold text-orange-600">Health Information</h3>
+                            </div>
+                            <div className="space-y-6">
+                                <div>
+                                    <label className="block text-orange-700 font-medium mb-2">Age:</label>
+                                    <MotionInput
+                                        type="number"
+                                        id="age"
+                                        value={profile.age}
+                                        onChange={handleInputChange}
+                                        className="w-full p-2 rounded-md border-orange-300 bg-white shadow-sm focus:border-orange-400 focus:ring focus:ring-orange-200 focus:ring-opacity-50"
+                                        whileFocus={{ scale: 1.02 }}
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-orange-700 font-medium mb-2">Weight (kg):</label>
+                                    <MotionInput
+                                        type="number"
+                                        id="weight"
+                                        value={profile.weight}
+                                        onChange={handleInputChange}
+                                        className="w-full p-2 rounded-md border-orange-300 bg-white shadow-sm focus:border-orange-400 focus:ring focus:ring-orange-200 focus:ring-opacity-50"
+                                        whileFocus={{ scale: 1.02 }}
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-orange-700 font-medium mb-2">Height (cm):</label>
+                                    <MotionInput
+                                        type="number"
+                                        id="height"
+                                        value={profile.height}
+                                        onChange={handleInputChange}
+                                        className="w-full p-2 rounded-md border-orange-300 bg-white shadow-sm focus:border-orange-400 focus:ring focus:ring-orange-200 focus:ring-opacity-50"
+                                        whileFocus={{ scale: 1.02 }}
+                                    />
+                                </div>
+                                <div>
+                                    <MotionSelect
+                                        options={[
+                                            { value: 'male', label: 'Male' },
+                                            { value: 'female', label: 'Female' },
+                                            { value: 'other', label: 'Other' }
+                                        ]}
+                                        selectedOption={{ value: profile.gender, label: profile.gender.charAt(0).toUpperCase() + profile.gender.slice(1) }}
+                                        onSelect={(option) => setProfile({ ...profile, gender: option.value as 'male' | 'female' | 'other' })}
+                                        label="Gender"
+                                    />
+                                </div>
+                                <div>
+                                    <MotionSelect
+                                        options={[
+                                            { value: 'sedentary', label: 'Sedentary' },
+                                            { value: 'light', label: 'Light' },
+                                            { value: 'moderate', label: 'Moderate' },
+                                            { value: 'active', label: 'Active' },
+                                            { value: 'very active', label: 'Very Active' }
+                                        ]}
+                                        selectedOption={{ value: profile.activityLevel, label: profile.activityLevel.charAt(0).toUpperCase() + profile.activityLevel.slice(1) }}
+                                        onSelect={(option) => setProfile({ ...profile, activityLevel: option.value as 'sedentary' | 'light' | 'moderate' | 'active' | 'very active' })}
+                                        label="Activity Level"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-orange-700 font-medium mb-2">Health Conditions:</label>
+                                    <MotionInput
+                                        type="text"
+                                        id="healthConditions"
+                                        value={profile.healthConditions.join(', ')}
+                                        onChange={(e) => setProfile({...profile, healthConditions: e.target.value.split(', ')})}
+                                        className="w-full p-2 rounded-md border-orange-300 bg-white shadow-sm focus:border-orange-400 focus:ring focus:ring-orange-200 focus:ring-opacity-50"
+                                        placeholder="Enter conditions separated by commas"
+                                        whileFocus={{ scale: 1.02 }}
+                                    />
+                                </div>
                             </div>
                         </div>
                     )}

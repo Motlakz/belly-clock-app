@@ -1,12 +1,13 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState, useEffect, useCallback } from 'react';
 import { db, storage } from '../firebase';
-import { collection, addDoc, getDocs, doc, updateDoc, deleteDoc, query, where } from 'firebase/firestore';
+import { collection, addDoc, getDocs, doc, updateDoc, deleteDoc, query } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useUser } from '@clerk/clerk-react';
 import EmojiPicker from '../components/EmojiPicker';
 import { expressiveEmojis } from '../api/emojiData';
-import { FaSmile } from 'react-icons/fa'; // Import the smile icon
+import { FaSmile } from 'react-icons/fa';
 
 const FastingJournal: React.FC = () => {
     const { user } = useUser();
@@ -19,21 +20,20 @@ const FastingJournal: React.FC = () => {
     const [alert, setAlert] = useState('');
     const [viewingEntry, setViewingEntry] = useState<{ entry: string; isPublic: boolean; id: string; imageUrl?: string; emotion?: string } | null>(null);
     const [editingEntry, setEditingEntry] = useState('');
-    const [isEmojiPickerVisible, setIsEmojiPickerVisible] = useState(false); // State for emoji picker visibility
-    const [isEmojiSelected, setIsEmojiSelected] = useState(false); // State for emoji selection status
+    const [isEmojiPickerVisible, setIsEmojiPickerVisible] = useState(false);
+    const [isEmojiSelected, setIsEmojiSelected] = useState(false);
 
     const fetchEntries = useCallback(async () => {
         if (!user) {
             console.error('No user logged in');
             return;
         }
-    
+
         try {
-            const q = query(collection(db, 'journalEntries'), where('userId', '==', user.id));
+            const q = query(collection(db, `users/${user.id}/journalEntries`));
             const querySnapshot = await getDocs(q);
             const fetchedEntries: { entry: string; isPublic: boolean; id: string; imageUrl?: string; emotion?: string }[] = [];
             querySnapshot.forEach((doc) => {
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 fetchedEntries.push({ ...doc.data(), id: doc.id } as any);
             });
             setEntries(fetchedEntries);
@@ -41,7 +41,7 @@ const FastingJournal: React.FC = () => {
             console.error('Error fetching entries: ', error);
         }
     }, [user]);
-    
+
     useEffect(() => {
         if (user) {
             fetchEntries();
@@ -50,7 +50,7 @@ const FastingJournal: React.FC = () => {
 
     const handleEntryChange = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
         setEntry(event.target.value);
-        setIsEmojiSelected(false); // Reset emoji selection status when changing entry
+        setIsEmojiSelected(false);
     };
 
     const handleToggleChange = () => {
@@ -85,21 +85,20 @@ const FastingJournal: React.FC = () => {
                 isPublic,
                 emotion: selectedEmotion,
                 imageUrl,
-                userId: user.id,
                 createdAt: new Date(),
             };
 
             if (editingId) {
-                await updateDoc(doc(db, 'journalEntries', editingId), entryData);
+                await updateDoc(doc(db, `users/${user.id}/journalEntries`, editingId), entryData); // Updated path
                 setEditingId(null);
             } else {
-                await addDoc(collection(db, 'journalEntries'), entryData);
+                await addDoc(collection(db, `users/${user.id}/journalEntries`), entryData); // Updated path
             }
             setEntry('');
             setIsPublic(false);
             setSelectedEmotion('');
             setImage(null);
-            setIsEmojiSelected(false); // Reset emoji selection status after submission
+            setIsEmojiSelected(false);
             fetchEntries();
         } catch (error) {
             console.error('Error handling document: ', error);
@@ -113,15 +112,20 @@ const FastingJournal: React.FC = () => {
             setIsPublic(entryToEdit.isPublic);
             setEditingId(entryId);
             setSelectedEmotion(entryToEdit.emotion || '');
-            setIsEmojiSelected(!!entryToEdit.emotion); // Set emoji selection status based on existing entry
+            setIsEmojiSelected(!!entryToEdit.emotion);
         }
     };
 
     const handleDelete = async (entryId: string) => {
+        if (!user) {
+            console.error('No user logged in');
+            return;
+        }
+    
         try {
-            await deleteDoc(doc(db, 'journalEntries', entryId));
+            await deleteDoc(doc(db, `users/${user.id}/journalEntries`, entryId));
             fetchEntries();
-            setViewingEntry(null); // Close the popup
+            setViewingEntry(null);
         } catch (error) {
             console.error('Error deleting document: ', error);
         }
@@ -135,11 +139,10 @@ const FastingJournal: React.FC = () => {
                 entry: editingEntry,
                 isPublic,
                 emotion: selectedEmotion,
-                userId: user.id,
                 updatedAt: new Date(),
             };
 
-            await updateDoc(doc(db, 'journalEntries', editingId), entryData);
+            await updateDoc(doc(db, `users/${user.id}/journalEntries`, editingId), entryData); // Updated path
             setEditingId(null);
             setViewingEntry(null);
             fetchEntries();
@@ -201,11 +204,11 @@ const FastingJournal: React.FC = () => {
                             selectedEmotion={selectedEmotion}
                             onSelect={(emoji) => {
                                 setSelectedEmotion(emoji);
-                                setIsEmojiSelected(true); // Set emoji selection status to true
-                                setIsEmojiPickerVisible(false); // Close the picker after selection
+                                setIsEmojiSelected(true);
+                                setIsEmojiPickerVisible(false);
                             }}
                             isVisible={isEmojiPickerVisible}
-                            onClose={() => setIsEmojiPickerVisible(false)} // Close the picker
+                            onClose={() => setIsEmojiPickerVisible(false)}
                         />
                     </div>
                     <input

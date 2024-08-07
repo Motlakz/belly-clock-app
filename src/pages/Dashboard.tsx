@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import Card from '../components/Card';
 import SuggestionsModal from '../components/SuggestionsModal';
 import { FastingHistory, generateFastingSuggestions, UserProfile } from '../lib/fastingSuggestions';
@@ -18,49 +18,59 @@ interface DashboardPageProps {
 }
 
 const DashboardPage: React.FC<DashboardPageProps> = () => {
-    const [isSuggestionsModalOpen, setIsSuggestionsModalOpen] = useState(false);
-    const [suggestions, setSuggestions] = useState<string[]>([]);
+    const [isSuggestionsModalOpen, setIsSuggestionsModalOpen] = useState(true);
     const { user } = useUser();
 
-    useEffect(() => {
-        const fetchUserDataAndGenerateSuggestions = async () => {
-            if (user) {
-                const docRef = doc(db, 'users', user.id);
-                const docSnap = await getDoc(docRef);
+    const generateSuggestions = useCallback(async () => {
+        if (user) {
+            const docRef = doc(db, 'users', user.id);
+            const docSnap = await getDoc(docRef);
+            
+            if (docSnap.exists()) {
+                const userData = docSnap.data();
+                const profile: UserProfile = {
+                    age: userData.age,
+                    weight: userData.weight,
+                    height: userData.height,
+                    gender: userData.gender,
+                    activityLevel: userData.activityLevel,
+                    healthConditions: userData.healthConditions || [],
+                };
+                const history: FastingHistory = {
+                    completedFasts: userData.completedFasts || 0,
+                    averageFastDuration: userData.averageFastDuration || 0,
+                    longestFast: userData.longestFast || 0,
+                    consistency: userData.consistency || 0,
+                };
                 
-                if (docSnap.exists()) {
-                    const userData = docSnap.data();
-                    const profile: UserProfile = {
-                        age: userData.age,
-                        weight: userData.weight,
-                        height: userData.height,
-                        gender: userData.gender,
-                        activityLevel: userData.activityLevel,
-                        healthConditions: userData.healthConditions || [],
-                    };
-                    const history: FastingHistory = {
-                        completedFasts: userData.completedFasts || 0,
-                        averageFastDuration: userData.averageFastDuration || 0,
-                        longestFast: userData.longestFast || 0,
-                        consistency: userData.consistency || 0,
-                    };
-                    
-                    // Find the current fasting type from the fastingTypes array
-                    const currentFastingType = fastingTypes.find(type => type.name === userData.currentFastingType) || fastingTypes[0];
-                    
-                    const generatedSuggestions = generateFastingSuggestions(profile, history, currentFastingType);
-                    setSuggestions(generatedSuggestions);
-                    setIsSuggestionsModalOpen(true);
-                }
+                const currentFastingType = fastingTypes.find(type => type.name === userData.currentFastingType) || fastingTypes[0];
+                
+                return generateFastingSuggestions(profile, history, currentFastingType);
+            }
+        }
+        return [];
+    }, [user]);
+
+    useEffect(() => {
+        const checkAndOpenModal = async () => {
+            const lastShownDate = localStorage.getItem('lastShownDate');
+            const today = new Date().toISOString().split('T')[0];
+
+            if (lastShownDate !== today) {
+                setIsSuggestionsModalOpen(true);
+                localStorage.setItem('lastShownDate', today);
             }
         };
 
-        fetchUserDataAndGenerateSuggestions();
+        checkAndOpenModal();
     }, [user]);
 
     return (
         <div className="container mx-auto px-4 py-8 bg-gradient-to-br from-violet-50 via-purple-50 to-indigo-50 min-h-screen">
-            <h1 className="text-3xl font-bold mb-8 text-center text-slate-500">Your Fasting Dashboard</h1>
+            <article className="text-center text-gray-700">
+                <h1 className="text-3xl font-bold mb-8 text-center text-slate-500">Your Fasting Dashboard</h1>
+                <p className="text-lg mb-6">Pick any card below for your Quick Start.</p>
+            </article>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div>
@@ -107,7 +117,7 @@ const DashboardPage: React.FC<DashboardPageProps> = () => {
             <SuggestionsModal
                 isOpen={isSuggestionsModalOpen}
                 onClose={() => setIsSuggestionsModalOpen(false)}
-                suggestions={suggestions}
+                generateSuggestions={generateSuggestions}
             />
         </div>
     );

@@ -1,3 +1,4 @@
+import { getGeminiSuggestions } from '../api/gemini';
 import { FastingType } from './fastingMethods';
 
 export interface UserProfile {
@@ -16,7 +17,18 @@ export interface FastingHistory {
   consistency: number; // 0-1, representing the ratio of completed fasts to attempted fasts
 }
 
-export function generateFastingSuggestions(
+export async function generateFastingSuggestions(
+  profile: UserProfile,
+  history: FastingHistory,
+  currentFastingType: FastingType
+): Promise<string[]> {
+  const basicSuggestions = generateBasicSuggestions(profile, history, currentFastingType);
+  const geminiSuggestions = await getGeminiSuggestions(profile, history, currentFastingType);
+  
+  return [...new Set([...basicSuggestions, ...geminiSuggestions])];
+}
+
+function generateBasicSuggestions(
   profile: UserProfile,
   history: FastingHistory,
   currentFastingType: FastingType
