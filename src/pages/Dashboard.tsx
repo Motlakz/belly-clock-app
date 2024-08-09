@@ -79,7 +79,7 @@ const DashboardPage: React.FC<DashboardPageProps> = () => {
                         description="Track your fasting sessions and manage your time effectively."
                         link="/fasting"
                         imageUrl="/src/assets/fasting.png"
-                        gradient="bg-gradient-to-br from-cyan-200 to-teal-400"
+                        gradient="bg-gradient-to-br from-cyan-400 to-teal-400"
                     />
                 </div>
                 
@@ -99,7 +99,7 @@ const DashboardPage: React.FC<DashboardPageProps> = () => {
                         description="Monitor your fasting progress over time."
                         link="/progress"
                         imageUrl="/src/assets/progress.png"
-                        gradient="bg-gradient-to-br from-purple-200 to-indigo-200"
+                        gradient="bg-gradient-to-br from-purple-200 to-indigo-400"
                     />
                 </div>
 

@@ -1,5 +1,4 @@
 /* eslint-disable react-hooks/exhaustive-deps */
-import { SignedIn, SignedOut, SignInButton, UserButton, useUser } from "@clerk/clerk-react";
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import DashboardPage from "./pages/Dashboard";
 import { ProfileForm } from "./pages/ProfileForm";
@@ -10,6 +9,11 @@ import { useEffect, useState } from "react";
 import { db } from './firebase';
 import { collection, getDocs, addDoc } from 'firebase/firestore';
 import FastingJournal from "./pages/FastingJournal";
+import LandingPage from "./pages/Home";
+import Navigation from './components/Navigation';
+import { useUser } from "@clerk/clerk-react";
+import SignUpPage from "./sign-up/[[...index]]";
+import SignInPage from "./sign-in/[[...index]]";
 
 interface ProgressData {
     date: string;
@@ -41,46 +45,39 @@ export default function App() {
     const handleFastingSessionEnd = async (duration: number, method: string) => {
         if (!user) return;
 
-        console.log(`Fasting session ended with method: ${method}`); // Example usage
+        console.log(`Fasting session ended with method: ${method}`);
 
         const newSession: ProgressData = {
             date: new Date().toISOString().split('T')[0],
             fastingHours: duration / 3600,
         };
 
-        // Immediately update the local state
         setProgressData(prevData => [...prevData, newSession]);
 
-        // Update Firestore
         try {
             await addDoc(collection(db, `users/${user.id}/progress`), newSession);
         } catch (error) {
             console.error('Error updating progress data:', error);
         }
 
-        // Optionally, refresh data from Firestore
         await fetchProgressData();
     };
 
-    if (!isLoaded) {
-        return <div>Loading...</div>; // You can customize this loading state
-    }
-
     return (
         <Router>
-            <header>
-                <SignedOut>
-                    <SignInButton />
-                </SignedOut>
-                <SignedIn>
-                    <UserButton />
-                </SignedIn>
-            </header>
+            <Navigation />
             <Routes>
-                <Route path="/" element={<Navigate to="/dashboard" />} /> {/* Redirect to dashboard */}
+                <Route 
+                    path="/" 
+                    element={isSignedIn ? <Navigate to="/dashboard" /> : <LandingPage />} 
+                />
+
+                <Route path="/sign-up" element={<SignUpPage />} />
+                <Route path="/sign-in" element={<SignInPage />} />
+
                 <Route 
                     path="/dashboard" 
-                    element={<DashboardPage progressData={progressData} onFastingSessionEnd={handleFastingSessionEnd} />} 
+                    element={isSignedIn ? <DashboardPage progressData={progressData} onFastingSessionEnd={handleFastingSessionEnd} /> : <Navigate to="/" />} 
                 />
                 <Route 
                     path="/profile" 

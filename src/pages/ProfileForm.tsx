@@ -516,7 +516,7 @@ export const ProfileForm: React.FC<ProfileFormProps> = ({ userId }) => {
                                     />
                                     <SubscriptionCard
                                         title="Premium"
-                                        price="$9.99/month"
+                                        price="$4.99/month"
                                         features={[
                                             "Advanced fasting tracker",
                                             "All fasting types",
