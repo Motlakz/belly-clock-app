@@ -3,7 +3,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { fastingTypes } from '../lib/fastingMethods';
 import CustomSelect from '../components/CustomSelect';
-import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { doc, getDoc, onSnapshot, setDoc } from 'firebase/firestore';
 import { db } from '../firebase';
 
 interface FastingTimerProps {
@@ -58,8 +58,28 @@ const FastingTimer: React.FC<FastingTimerProps> = ({ userId, onFastingSessionEnd
         }, [userId]);
 
         useEffect(() => {
-            updateFastingPreferences();
-        }, [selectedFastingType, customHours, customMinutes]);
+            const userDocRef = doc(db, 'users', userId);
+            const unsubscribe = onSnapshot(userDocRef, (doc) => {
+                if (doc.exists()) {
+                    const userData = doc.data();
+                    const { preferredMethod, customFastingWindow } = userData.fastingPreferences || {};
+                    
+                    if (preferredMethod) {
+                        const selectedType = fastingTypes.find(type => type.name === preferredMethod) || fastingTypes[0];
+                        setSelectedFastingType(selectedType);
+                    }
+                    
+                    if (customFastingWindow) {
+                        const [hours, minutes] = customFastingWindow.split(':');
+                        setCustomHours(Number(hours));
+                        setCustomMinutes(Number(minutes));
+                    }
+                }
+            });
+        
+            // Cleanup function to unsubscribe when component unmounts
+            return () => unsubscribe();
+        }, [userId]);
         
         useEffect(() => {
             let interval: NodeJS.Timeout | null = null;
@@ -89,17 +109,25 @@ const FastingTimer: React.FC<FastingTimerProps> = ({ userId, onFastingSessionEnd
             };
         }, [isActive, startTime, duration, time]);
 
-    const toggleTimer = async () => {
-        if (isActive) {
-            await stopFastingSession();
-            setIsActive(false);
-        } else {
-            const now = new Date();
-            setStartTime(now);
-            setIsActive(true);
-            await startFastingSession(now);
-        }
-    };
+        const toggleTimer = async () => {
+            if (isActive) {
+                await stopFastingSession();
+                setIsActive(false);
+            } else {
+                const now = new Date();
+                if (startTime) {
+                    // Resume the timer
+                    const pausedDuration = now.getTime() - startTime.getTime();
+                    setStartTime(new Date(now.getTime() - pausedDuration));
+                } else {
+                    // Start a new timer
+                    setStartTime(now);
+                    await startFastingSession(now);
+                }
+                setIsActive(true);
+                playSound('start');
+            }
+        };
 
     const startFastingSession = async (startTime: Date) => {
         const method = selectedFastingType.name;
@@ -120,31 +148,6 @@ const FastingTimer: React.FC<FastingTimerProps> = ({ userId, onFastingSessionEnd
             setSessionId(sessionRef.id);
         } catch (error) {
             console.error('Error starting fasting session:', error);
-        }
-    };
-
-    const updateFastingPreferences = async () => {
-        try {
-            const preferredMethod = selectedFastingType.name;
-            const customFastingWindow = preferredMethod === 'Custom' 
-                ? `${customHours.toString().padStart(2, '0')}:${customMinutes.toString().padStart(2, '0')}`
-                : null; // Use null instead of undefined
-
-            console.log('Updating fasting preferences with:', { preferredMethod, customFastingWindow, reminderFrequency: 60 });
-
-            // Create a reference to the user's fasting preferences document
-            const preferencesRef = doc(db, `users/${userId}/preferences`);
-
-            // Set the preferences in Firestore
-            await setDoc(preferencesRef, {
-                preferredMethod,
-                customFastingWindow,
-                reminderFrequency: 60,
-            }, { merge: true }); 
-
-            console.log('Fasting preferences updated successfully');
-        } catch (error) {
-            console.error('Error updating fasting preferences:', error);
         }
     };
 
@@ -191,7 +194,22 @@ const FastingTimer: React.FC<FastingTimerProps> = ({ userId, onFastingSessionEnd
     const playSound = (soundType: 'start' | 'click' | 'reset' | 'complete') => {
         if (audioRef.current) {
             audioRef.current.src = `/sounds/${soundType}.mp3`;
-            audioRef.current.play().catch(error => console.error('Error playing sound:', error));
+            audioRef.current.load(); // Ensure the audio is loaded
+            audioRef.current.play().catch(error => {
+                console.error('Error playing sound:', error);
+                // Attempt to play again after user interaction if it's an autoplay issue
+                if (error.name === 'NotAllowedError') {
+                    const playAttempt = setInterval(() => {
+                        audioRef.current?.play()
+                            .then(() => {
+                                clearInterval(playAttempt);
+                            })
+                            .catch(() => {
+                                console.log("Auto-play still not allowed");
+                            });
+                    }, 1000);
+                }
+            });
         }
     };
 
@@ -241,7 +259,6 @@ const FastingTimer: React.FC<FastingTimerProps> = ({ userId, onFastingSessionEnd
                         selectedOption={selectedFastingType}
                         onSelect={(option) => {
                             setSelectedFastingType(option);
-                            updateFastingPreferences();
                         }}
                     />
                     {selectedFastingType.name === 'Custom' && (
@@ -252,7 +269,6 @@ const FastingTimer: React.FC<FastingTimerProps> = ({ userId, onFastingSessionEnd
                                 value={customHours}
                                 onChange={(e) => {
                                     setCustomHours(Number(e.target.value));
-                                    updateFastingPreferences();
                                 }}
                                 placeholder="Hours"
                                 min="0"
@@ -264,7 +280,6 @@ const FastingTimer: React.FC<FastingTimerProps> = ({ userId, onFastingSessionEnd
                                 value={customMinutes}
                                 onChange={(e) => {
                                     setCustomMinutes(Number(e.target.value));
-                                    updateFastingPreferences();
                                 }}
                                 placeholder="Minutes"
                                 min="0"

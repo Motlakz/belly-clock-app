@@ -14,6 +14,9 @@ import Navigation from './components/Navigation';
 import { useUser } from "@clerk/clerk-react";
 import SignUpPage from "./sign-up/[[...index]]";
 import SignInPage from "./sign-in/[[...index]]";
+import LoadingScreen from "./components/LoadingScreen";
+import Modal from "./components/StressModal";
+import StressChecker from "./components/StressChecker";
 
 interface ProgressData {
     date: string;
@@ -23,6 +26,26 @@ interface ProgressData {
 export default function App() {
     const { user, isLoaded, isSignedIn } = useUser();
     const [progressData, setProgressData] = useState<ProgressData[]>([]);
+    const [isAppReady, setIsAppReady] = useState(false);
+    const [isStressCheckerOpen, setIsStressCheckerOpen] = useState(false);
+
+    const openStressChecker = () => {
+        setIsStressCheckerOpen(true);
+    };
+
+    const closeStressChecker = () => {
+        setIsStressCheckerOpen(false);
+    };
+
+    useEffect(() => {
+        if (isLoaded) {
+            // Simulate any necessary app initialization
+            const timer = setTimeout(() => {
+                setIsAppReady(true);
+            }, 1000); // Adjust this time as needed
+            return () => clearTimeout(timer);
+        }
+    }, [isLoaded]);
 
     useEffect(() => {
         if (isLoaded && user) {
@@ -63,13 +86,28 @@ export default function App() {
         await fetchProgressData();
     };
 
+    if (!isLoaded || !isAppReady) {
+        return <LoadingScreen />;
+    }
+
     return (
         <Router>
-            <Navigation />
+            <Navigation openStressChecker={openStressChecker} />
+            <Modal isOpen={isStressCheckerOpen} onClose={closeStressChecker}>
+                <StressChecker />
+            </Modal>
             <Routes>
                 <Route 
                     path="/" 
-                    element={isSignedIn ? <Navigate to="/dashboard" /> : <LandingPage />} 
+                    element={
+                        isSignedIn ? (
+                            <Navigate to="/dashboard" />
+                        ) : isAppReady ? (
+                            <LoadingScreen />
+                        ) : (
+                            <LandingPage />
+                        )
+                    } 
                 />
 
                 <Route path="/sign-up" element={<SignUpPage />} />

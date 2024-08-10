@@ -66,7 +66,7 @@ const DashboardPage: React.FC<DashboardPageProps> = () => {
     }, [user]);
 
     return (
-        <div className="container mx-auto px-4 py-8 bg-gradient-to-br from-violet-50 via-purple-50 to-indigo-50 min-h-screen">
+        <div className="sm:px-12 px-8 py-8 bg-gradient-to-br from-violet-50 via-purple-50 to-indigo-50 min-h-screen mt-16 sm:mt-20">
             <article className="text-center text-gray-700">
                 <h1 className="text-3xl font-bold mb-8 text-center text-slate-500">Your Fasting Dashboard</h1>
                 <p className="text-lg mb-6">Pick any card below for your Quick Start.</p>

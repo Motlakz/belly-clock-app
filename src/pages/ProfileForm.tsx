@@ -3,14 +3,13 @@ import { useUser } from "@clerk/clerk-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { GiPerson, GiSandsOfTime, GiWaterDrop, GiChart, GiPadlock } from "react-icons/gi";
 import { FaBell, FaEdit, FaEnvelope, FaSmile, FaTrash, FaUserEdit } from "react-icons/fa";
-import CustomSelect from "../components/CustomSelect";
 import { fastingTypes, FastingType } from "../lib/fastingMethods";
 import CommunitySection from "../components/CommunitySection";
 import AdvancedSection from "../components/AdvancedSection";
 import { SubscriptionCard } from "../components/SubscriptionCard";
 import { doc, getDoc, setDoc } from "firebase/firestore";
 import { db } from "../firebase";
-import { generateFastingSuggestions, UserProfile, FastingHistory } from "../lib/fastingSuggestions";
+import { UserProfile, FastingHistory } from "../lib/fastingSuggestions";
 import MotionSelect from "../components/MotionSelect";
 
 interface ProfileFormProps {
@@ -30,6 +29,11 @@ interface ExtendedUserProfile extends UserProfile {
     voiceCommandsEnabled?: boolean;
     stressMoodTracking?: boolean;
     subscriptionTier?: "free" | "premium";
+    fastingPreferences?: {
+        preferredMethod?: string;
+        customFastingWindow?: { start: string; end: string };
+        reminderFrequency?: number;
+    };
 }
 
 const MotionInput = motion.input;
@@ -46,11 +50,15 @@ export const ProfileForm: React.FC<ProfileFormProps> = ({ userId }) => {
         gender: 'other',
         activityLevel: 'sedentary',
         healthConditions: [],
+        fastingPreferences: {
+            preferredMethod: fastingTypes[0].name,
+            reminderFrequency: 4,
+        },
     });
     const [activeTab, setActiveTab] = useState("general");
     const [selectedFastingType, setSelectedFastingType] = useState<FastingType>(fastingTypes[0]);
     const [editMode, setEditMode] = useState<string | null>(null);
-    const [fastingHistory, setFastingHistory] = useState<FastingHistory>({
+    const [, setFastingHistory] = useState<FastingHistory>({
         completedFasts: 0,
         averageFastDuration: 0,
         longestFast: 0,
@@ -63,12 +71,24 @@ export const ProfileForm: React.FC<ProfileFormProps> = ({ userId }) => {
                 const userDocRef = doc(db, "users", userId);
                 const userDocSnap = await getDoc(userDocRef);
                 if (userDocSnap.exists()) {
+                    const userData = userDocSnap.data() as ExtendedUserProfile;
                     setProfile((prevProfile) => ({
                         ...prevProfile,
-                        ...userDocSnap.data()
+                        ...userData,
+                        fastingPreferences: {
+                            preferredMethod: fastingTypes[0].name, // Default value
+                            reminderFrequency: 4, // Default value
+                            ...prevProfile.fastingPreferences,
+                            ...userData.fastingPreferences,
+                        },
                     }));
+                    
+                    // Set selected fasting type
+                    const preferredMethod = userData.fastingPreferences?.preferredMethod || fastingTypes[0].name;
+                    const selectedType = fastingTypes.find(type => type.name === preferredMethod) || fastingTypes[0];
+                    setSelectedFastingType(selectedType);
                 }
-
+    
                 const historyDocRef = doc(db, "fastingHistory", userId);
                 const historyDocSnap = await getDoc(historyDocRef);
                 if (historyDocSnap.exists()) {
@@ -77,24 +97,27 @@ export const ProfileForm: React.FC<ProfileFormProps> = ({ userId }) => {
             }
         };
         fetchProfileAndHistory();
-    }, [userId]);
-
-    useEffect(() => {
-        const fetchSuggestions = async () => {
-            const newSuggestions = await generateFastingSuggestions(profile, fastingHistory, selectedFastingType);
-            // Here you would typically update some state or call a function to handle the new suggestions
-            // For now, we'll just log them
-            console.log("New suggestions:", newSuggestions);
-        };
-        fetchSuggestions();
-    }, [profile, fastingHistory, selectedFastingType]);
+    }, [userId, selectedFastingType]);
 
     const handleSubmit = async (e: FormEvent) => {
         e.preventDefault();
         if (userId) {
-            const docRef = doc(db, "users", userId);
-            await setDoc(docRef, profile, { merge: true });
-            alert("Profile updated successfully!");
+            try {
+                const docRef = doc(db, "users", userId);
+                const updatedProfile = {
+                    ...profile,
+                    fastingPreferences: {
+                        preferredMethod: profile.fastingPreferences?.preferredMethod || fastingTypes[0].name,
+                        customFastingWindow: profile.fastingPreferences?.customFastingWindow,
+                        reminderFrequency: profile.fastingPreferences?.reminderFrequency ?? 4,
+                    }
+                };
+                await setDoc(docRef, updatedProfile, { merge: true });
+                alert("Profile updated successfully!");
+            } catch (error) {
+                console.error("Error updating profile:", error);
+                alert("An error occurred while updating your profile. Please try again.");
+            }
         }
     };
 
@@ -103,7 +126,41 @@ export const ProfileForm: React.FC<ProfileFormProps> = ({ userId }) => {
         setProfile((prevProfile) => ({
             ...prevProfile,
             [id]: type === 'checkbox' ? checked : value,
+            fastingPreferences: {
+                ...prevProfile.fastingPreferences,
+                [id]: type === 'checkbox' ? checked : value,
+            }
         }));
+    };
+
+    const handleFastingTypeChange = async (option: { value: string, label: string }) => {
+        const newFastingType = fastingTypes.find(type => type.name === option.value);
+        if (newFastingType && userId) {
+            try {
+                // Update local state
+                setSelectedFastingType(newFastingType);
+                setProfile(prev => ({
+                    ...prev,
+                    fastingPreferences: {
+                        ...prev.fastingPreferences,
+                        preferredMethod: newFastingType.name,
+                    }
+                }));
+    
+                // Update Firestore
+                const userDocRef = doc(db, "users", userId);
+                await setDoc(userDocRef, {
+                    fastingPreferences: {
+                        preferredMethod: newFastingType.name,
+                    }
+                }, { merge: true });
+    
+                console.log("Fasting preference updated successfully");
+            } catch (error) {
+                console.error("Error updating fasting preference:", error);
+                alert("An error occurred while updating your fasting preference. Please try again.");
+            }
+        }
     };
 
     const handleCustomFastingWindowChange = (e: ChangeEvent<HTMLInputElement>) => {
@@ -140,7 +197,7 @@ export const ProfileForm: React.FC<ProfileFormProps> = ({ userId }) => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
-            className="bg-gradient-to-br from-orange-100 to-yellow-100 p-8 rounded-lg shadow-lg max-w-4xl mx-auto"
+            className="bg-gradient-to-br from-orange-100 to-yellow-100 p-8 rounded-lg shadow-lg max-w-4xl mx-auto mt-16 sm:mt-36"
         >
             <motion.h2
                 className="text-4xl font-bold mb-6 text-orange-600 text-center"
@@ -365,12 +422,12 @@ export const ProfileForm: React.FC<ProfileFormProps> = ({ userId }) => {
                             </div>
                             <div className="space-y-6">
                                 <div>
-                                    <label className="block text-orange-700 font-medium mb-2">Preferred Fasting Method:</label>
-                                    <CustomSelect
-                                        options={fastingTypes}
-                                        selectedOption={selectedFastingType}
-                                        onSelect={setSelectedFastingType}
-                                    />
+                                <MotionSelect
+                                    options={fastingTypes.map(type => ({ value: type.name, label: `${type.icon} ${type.name}` }))}
+                                    selectedOption={{ value: selectedFastingType.name, label: `${selectedFastingType.icon} ${selectedFastingType.name}` }}
+                                    onSelect={handleFastingTypeChange}
+                                    label="Preferred Fasting Method"
+                                />
                                 </div>
                                 {profile.preferredMethod === "custom" && (
                                     <motion.div 

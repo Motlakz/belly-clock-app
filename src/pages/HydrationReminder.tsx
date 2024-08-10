@@ -58,7 +58,7 @@ const HydrationReminder: React.FC<HydrationReminderProps> = ({ userId }) => {
                 await requestNotificationPermission();
             }
         }
-    }, [currentIntake, dailyGoal]); // Include dependencies
+    }, [currentIntake, dailyGoal]);
 
     const requestNotificationPermission = async () => {
         if ('Notification' in window) {
@@ -77,13 +77,13 @@ const HydrationReminder: React.FC<HydrationReminderProps> = ({ userId }) => {
         const checkReminder = setInterval(() => {
             const now = Date.now();
             if (now - lastReminder >= reminderFrequency * 60 * 1000) {
-                sendNotification(); // Call the notification function
+                sendNotification();
                 setLastReminder(now);
             }
         }, 60000);
 
         return () => clearInterval(checkReminder);
-    }, [reminderFrequency, lastReminder, hydrationRemindersEnabled, sendNotification]); // Include sendNotification
+    }, [reminderFrequency, lastReminder, hydrationRemindersEnabled, sendNotification]);
 
     const updateWaterIntake = async (amount: number) => {
         const newIntake = Math.max(0, currentIntake + amount);
@@ -121,6 +121,16 @@ const HydrationReminder: React.FC<HydrationReminderProps> = ({ userId }) => {
             console.error('Error resetting water intake:', error);
         }
     };
+
+    // Calculate daily average intake
+    const calculateAverageIntake = () => {
+        if (intakeHistory.length === 0) return 0;
+        const totalIntake = intakeHistory.reduce((sum, intake) => sum + intake.amount, 0);
+        return totalIntake / intakeHistory.length;
+    };
+
+    const averageIntake = calculateAverageIntake();
+    const intakePercentage = ((currentIntake / dailyGoal) * 100).toFixed(2);
 
     return (
         <div ref={containerRef} className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-700 via-cyan-800 to-blue-600 p-4 relative overflow-hidden rounded-lg">
@@ -186,8 +196,10 @@ const HydrationReminder: React.FC<HydrationReminderProps> = ({ userId }) => {
                     <div className="bg-blue-500/30 p-4 rounded-lg">
                         <h3 className="text-xl font-bold text-blue-100 mb-2">Daily Progress</h3>
                         <p className="text-blue-200">{currentIntake} / {dailyGoal} ml</p>
+                        <p className="text-blue-200">Intake Percentage: {intakePercentage}%</p>
+                        <p className="text-blue-200">Average Intake: {averageIntake.toFixed(2)} ml</p>
                         <div className="w-full bg-blue-200 rounded-full h-2.5 dark:bg-blue-700 mt-2">
-                            <div className="bg-blue-600 h-2.5 rounded-full" style={{ width: `${(currentIntake / dailyGoal) * 100}%` }}></div>
+                            <div className="bg-blue-600 h-2.5 rounded-full" style={{ width: `${intakePercentage}%` }}></div>
                         </div>
                     </div>
                     <div className="flex justify-between items-center">

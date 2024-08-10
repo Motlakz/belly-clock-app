@@ -156,7 +156,7 @@ const FastingJournal: React.FC = () => {
     };
 
     return (
-        <div className="bg-orange-50 p-4 sm:p-8 min-h-screen rounded-lg">
+        <div className="bg-orange-50 p-4 sm:p-8 min-h-screen rounded-lg flex flex-col items-center justify-center">
             <section className="max-w-4xl mx-auto p-6 backdrop-blur-md bg-gradient-to-br from-orange-100 to-orange-200 border border-orange-300 rounded-lg shadow-lg">
                 <motion.h2
                     className="text-3xl font-bold text-orange-600 mb-4"
