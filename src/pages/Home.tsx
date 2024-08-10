@@ -98,9 +98,9 @@ const LandingPage: React.FC = () => {
       {/* Features Section */}
         <section id="features" className="py-20 min-h-screen bg-gradient-to-r from-purple-100 to-blue-100">
             <div className="container mx-auto px-4">
-                <h1 className="sm:text-4xl text-2xl font-bold mb-12 text-center text-purple-800">
+                <h2 className="sm:text-4xl text-2xl font-bold mb-12 text-center text-purple-800">
                     Powerful Features for Intermittent Fasting Success
-                </h1>
+                </h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
                     {[
                         { icon: '⏱️', title: 'Fasting Hours Calculator', description: 'Optimize your fasting windows for maximum weight loss', color: 'from-teal-400 to-cyan-300' },

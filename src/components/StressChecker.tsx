@@ -162,14 +162,14 @@ const StressChecker: React.FC = () => {
 
     return (
         <div className="max-w-4xl mx-auto p-8 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl shadow-2xl">
-            <motion.h1 
+            <motion.h2 
                 className="text-4xl font-bold mb-8 text-center text-indigo-600"
                 initial={{ opacity: 0, y: -20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5 }}
             >
                 Stress Checker
-            </motion.h1>
+            </motion.h2>
             
             {user ? (
                 <>

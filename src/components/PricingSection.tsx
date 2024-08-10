@@ -52,9 +52,9 @@ const PricingCard: React.FC<PricingCardProps> = ({ title, price, features, isPop
         <section id="pricing" className="bg-purple-100 min-h-screen py-16 px-4 sm:px-6 lg:px-8">
             <div className="max-w-7xl mx-auto">
                 <div className="text-center mb-16">
-                <h1 className="text-3xl font-extrabold text-purple-900 sm:text-5xl">
+                <h2 className="text-3xl font-extrabold text-purple-900 sm:text-5xl">
                     Choose Your Fasting Journey
-                </h1>
+                </h2>
                 <p className="mt-4 sm:text-xl text-purple-600">
                     Select the plan that best fits your health and wellness goals
                 </p>
