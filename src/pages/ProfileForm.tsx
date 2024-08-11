@@ -38,7 +38,7 @@ interface ExtendedUserProfile extends UserProfile {
 
 const MotionInput = motion.input;
 
-export const ProfileForm: React.FC<ProfileFormProps> = ({ userId }) => {
+const ProfileForm: React.FC<ProfileFormProps> = ({ userId }) => {
     const { user } = useUser();
     const [profile, setProfile] = useState<ExtendedUserProfile>({
         name: user?.fullName || '',
@@ -626,3 +626,5 @@ export const ProfileForm: React.FC<ProfileFormProps> = ({ userId }) => {
         </motion.div>
     );
 }
+
+export default ProfileForm;

@@ -89,8 +89,8 @@ const LandingPage: React.FC = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8 }}
         >
-          <h1 className="sm:text-6xl text-4xl font-bold mb-4 text-shadow-lg">Free Intermittent Fasting Calculator</h1>
-          <p className="sm:text-2xl mb-8 text-shadow">Optimize Your Weight Loss and Health with Precision Fasting Tools</p>
+          <h1 className="sm:text-6xl text-4xl font-bold mb-6 text-shadow-lg">Free Intermittent Fasting Calculator, <span className="highlight text-cyan-400 border-b-cyan-400 border-b-8">with an AI twist</span></h1>
+          <p className="sm:text-2xl mb-8 text-shadow">Optimize Your Weight Loss and Health with Precision Fasting Tools and your dedicated AI assistant.</p>
           <InteractiveButton />
         </motion.div>
       </header>
@@ -136,7 +136,7 @@ const LandingPage: React.FC = () => {
         </section>
 
       {/* Interactive Demo Section */}
-        <section id="showcase" className="py-20 bg-gradient-to-r from-blue-500 to-purple-500">
+        <section id="quiz" className="py-20 bg-gradient-to-r from-blue-500 to-purple-500">
             <div className="container mx-auto px-4 flex items-center justify-center flex-col text-center text-white">
                 <h2 className="text-4xl font-bold mb-8">Experience Our Free Fasting Weight Loss Calculator</h2>
                 <FastingPlanWithQuiz />

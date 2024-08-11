@@ -47,12 +47,12 @@ const CustomSelect: React.FC<CustomSelectProps> = ({ options, selectedOption, on
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: -10 }}
                         transition={{ duration: 0.2 }}
-                        className="absolute z-10 w-full mt-1 bg-white border border-teal-300 rounded shadow-lg max-h-60 overflow-y-auto"
+                        className="z-20 w-full mt-1 bg-white border border-teal-300 rounded shadow-lg max-h-60 overflow-y-auto"
                     >
                         {options.map((option) => (
                             <button
                                 key={option.name}
-                                className="w-full p-2 text-left text-teal-700 hover:bg-teal-50 transition-colors flex items-center"
+                                className="w-full p-2 text-left text-teal-700 hover:bg-teal-100 transition-colors flex items-center"
                                 onClick={() => {
                                     onSelect(option);
                                     setIsDropdownOpen(false);

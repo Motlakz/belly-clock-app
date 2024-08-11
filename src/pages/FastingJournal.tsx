@@ -8,6 +8,7 @@ import { useUser } from '@clerk/clerk-react';
 import EmojiPicker from '../components/EmojiPicker';
 import { expressiveEmojis } from '../api/emojiData';
 import { FaSmile } from 'react-icons/fa';
+import FastingPromptWheel from '../components/PromptGenerator';
 
 const FastingJournal: React.FC = () => {
     const { user } = useUser();
@@ -89,10 +90,10 @@ const FastingJournal: React.FC = () => {
             };
 
             if (editingId) {
-                await updateDoc(doc(db, `users/${user.id}/journalEntries`, editingId), entryData); // Updated path
+                await updateDoc(doc(db, `users/${user.id}/journalEntries`, editingId), entryData);
                 setEditingId(null);
             } else {
-                await addDoc(collection(db, `users/${user.id}/journalEntries`), entryData); // Updated path
+                await addDoc(collection(db, `users/${user.id}/journalEntries`), entryData);
             }
             setEntry('');
             setIsPublic(false);
@@ -142,7 +143,7 @@ const FastingJournal: React.FC = () => {
                 updatedAt: new Date(),
             };
 
-            await updateDoc(doc(db, `users/${user.id}/journalEntries`, editingId), entryData); // Updated path
+            await updateDoc(doc(db, `users/${user.id}/journalEntries`, editingId), entryData);
             setEditingId(null);
             setViewingEntry(null);
             fetchEntries();
@@ -157,7 +158,7 @@ const FastingJournal: React.FC = () => {
 
     return (
         <div className="bg-orange-50 p-4 sm:p-8 min-h-screen rounded-lg flex flex-col items-center justify-center">
-            <section className="max-w-4xl mx-auto p-6 backdrop-blur-md bg-gradient-to-br from-orange-100 to-orange-200 border border-orange-300 rounded-lg shadow-lg">
+            <section className="max-w-4xl mx-auto p-6 backdrop-blur-md bg-gradient-to-br from-orange-100 to-orange-200 border border-orange-300 rounded-lg shadow-lg mt-24">
                 <motion.h2
                     className="text-3xl font-bold text-orange-600 mb-4"
                     initial={{ opacity: 0, y: -20 }}
@@ -166,6 +167,7 @@ const FastingJournal: React.FC = () => {
                 >
                     Fasting Journal
                 </motion.h2>
+
                 <form onSubmit={handleSubmit} className="mb-6">
                     <motion.textarea
                         value={entry}
@@ -226,6 +228,11 @@ const FastingJournal: React.FC = () => {
                         {editingId ? 'Update' : 'Submit'}
                     </motion.button>
                 </form>
+
+                <div className="mb-6">
+                    <h3 className="text-xl text-center font-semibold text-orange-600 mb-2">Need some writing inspiration? Spin the wheel to stir some thoughts!</h3>
+                    <FastingPromptWheel />
+                </div>
 
                 {alert && (
                     <div className="mb-4 p-2 bg-orange-100 text-orange-700 rounded">

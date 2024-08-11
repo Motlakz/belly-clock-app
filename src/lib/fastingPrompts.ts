@@ -1,0 +1,61 @@
+export const fastingPrompts = [
+    // Fasting Journal Prompts
+    "How do you feel physically during your fast today?",
+    "What mental changes have you noticed since starting your fasting journey?",
+    "Describe your energy levels throughout the day while fasting.",
+    "What challenges did you face today in sticking to your fasting schedule?",
+    "How has fasting affected your relationship with food?",
+    "What strategies are you using to manage hunger during fasting periods?",
+    "Reflect on your motivation for fasting. Has it changed since you started?",
+    "How has fasting impacted your daily routine?",
+    "What unexpected benefits have you experienced from fasting?",
+    "Describe your most recent meal. How did it taste after fasting?",
+  
+    // Self-Care Prompts
+    "What self-care activities do you engage in during fasting periods?",
+    "How do you reward yourself for sticking to your fasting goals?",
+    "Describe a relaxing activity you enjoy during fasting hours.",
+    "How do you practice mindfulness while fasting?",
+    "What positive affirmations do you use to support your fasting journey?",
+    "How do you ensure you're staying hydrated during fasting?",
+    "What gentle exercises do you incorporate during fasting periods?",
+    "How do you manage stress while fasting?",
+    "Describe your ideal self-care routine on a fasting day.",
+    "What boundaries have you set to protect your fasting practice?",
+  
+    // Positive Self-Reflection Prompts
+    "What personal strengths have you discovered through fasting?",
+    "How has fasting contributed to your overall well-being?",
+    "Reflect on a moment when you felt proud of your fasting progress.",
+    "What have you learned about yourself through the fasting process?",
+    "How has fasting helped you grow as a person?",
+    "Describe a fasting-related goal you've achieved recently.",
+    "What positive changes have you noticed in your body image since fasting?",
+    "How has fasting improved your self-discipline in other areas of life?",
+    "What aspects of fasting are you most grateful for?",
+    "Reflect on how fasting has positively impacted your relationships.",
+  
+    // Other Related Prompts
+    "How do you plan to break your fast mindfully?",
+    "What new healthy recipes have you discovered to support your fasting lifestyle?",
+    "How has fasting affected your sleep patterns?",
+    "Describe your ideal fasting routine and why it works for you.",
+    "What resources or communities have been most helpful in your fasting journey?",
+    "How do you balance social activities with your fasting schedule?",
+    "What misconceptions about fasting have you encountered, and how do you address them?",
+    "How has fasting influenced your long-term health goals?",
+    "Reflect on how fasting has changed your perception of hunger and fullness.",
+    "What advice would you give to someone just starting their fasting journey?",
+  
+    // Additional prompts to reach 100
+    "How do you stay motivated during longer fasting periods?",
+    "What role does meditation play in your fasting practice?",
+    "How has fasting affected your productivity at work or in daily tasks?",
+    "Describe a creative project or hobby you've engaged in during fasting hours.",
+    "What changes have you noticed in your skin since starting fasting?",
+    "How do you handle cravings during fasting periods?",
+    "Reflect on how fasting has influenced your financial habits (e.g., food expenses).",
+    "What unexpected challenges have you faced in your fasting journey?",
+    "How do you celebrate fasting milestones?",
+    "Describe your favorite way to prepare for a fast.",
+];

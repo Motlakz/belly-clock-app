@@ -1,22 +1,23 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
-import DashboardPage from "./pages/Dashboard";
-import { ProfileForm } from "./pages/ProfileForm";
-import HydrationReminder from "./pages/HydrationReminder";
-import ProgressTracker from "./pages/ProgressTracker";
-import FastingTimer from "./pages/FastingTimer";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback, lazy, Suspense } from "react";
+import { useUser } from "@clerk/clerk-react";
 import { db } from './firebase';
 import { collection, getDocs, addDoc } from 'firebase/firestore';
-import FastingJournal from "./pages/FastingJournal";
-import LandingPage from "./pages/Home";
-import Navigation from './components/Navigation';
-import { useUser } from "@clerk/clerk-react";
-import SignUpPage from "./sign-up/[[...index]]";
-import SignInPage from "./sign-in/[[...index]]";
 import LoadingScreen from "./components/LoadingScreen";
 import Modal from "./components/StressModal";
 import StressChecker from "./components/StressChecker";
+
+const DashboardPage = lazy(() => import("./pages/Dashboard"));
+const ProfileForm = lazy(() => import("./pages/ProfileForm"));
+const HydrationReminder = lazy(() => import("./pages/HydrationReminder"));
+const ProgressTracker = lazy(() => import("./pages/ProgressTracker"));
+const FastingTimer = lazy(() => import("./pages/FastingTimer"));
+const FastingJournal = lazy(() => import("./pages/FastingJournal"));
+const LandingPage = lazy(() => import("./pages/Home"));
+const SignUpPage = lazy(() => import("./sign-up/[[...index]]"));
+const SignInPage = lazy(() => import("./sign-in/[[...index]]"));
+const Navigation = lazy(() => import('./components/Navigation'));
 
 interface ProgressData {
     date: string;
@@ -29,17 +30,16 @@ export default function App() {
     const [isAppReady, setIsAppReady] = useState(false);
     const [isStressCheckerOpen, setIsStressCheckerOpen] = useState(false);
 
-    const openStressChecker = () => {
+    const openStressChecker = useCallback(() => {
         setIsStressCheckerOpen(true);
-    };
+    }, []);
 
-    const closeStressChecker = () => {
+    const closeStressChecker = useCallback(() => {
         setIsStressCheckerOpen(false);
-    };
+    }, []);
 
     useEffect(() => {
         if (isLoaded) {
-            // Simulate any necessary app initialization
             const timer = setTimeout(() => {
                 setIsAppReady(true);
             }, 1000); // Adjust this time as needed
@@ -51,7 +51,7 @@ export default function App() {
         if (isLoaded && user) {
             fetchProgressData();
         }
-    }, [isLoaded, user]);
+    }, [isLoaded, user?.id]);
 
     const fetchProgressData = async () => {
         if (!user) return;
@@ -75,15 +75,12 @@ export default function App() {
             fastingHours: duration / 3600,
         };
 
-        setProgressData(prevData => [...prevData, newSession]);
-
         try {
             await addDoc(collection(db, `users/${user.id}/progress`), newSession);
+            setProgressData(prevData => [...prevData, newSession]);
         } catch (error) {
             console.error('Error updating progress data:', error);
         }
-
-        await fetchProgressData();
     };
 
     if (!isLoaded || !isAppReady) {
@@ -92,52 +89,46 @@ export default function App() {
 
     return (
         <Router>
-            <Navigation openStressChecker={openStressChecker} />
-            <Modal isOpen={isStressCheckerOpen} onClose={closeStressChecker}>
-                <StressChecker />
-            </Modal>
-            <Routes>
-                <Route 
-                    path="/" 
-                    element={
-                        isSignedIn ? (
-                            <Navigate to="/dashboard" />
-                        ) : isAppReady ? (
-                            <LoadingScreen />
-                        ) : (
-                            <LandingPage />
-                        )
-                    } 
-                />
+            <Suspense fallback={<LoadingScreen />}>
 
-                <Route path="/sign-up" element={<SignUpPage />} />
-                <Route path="/sign-in" element={<SignInPage />} />
-
-                <Route 
-                    path="/dashboard" 
-                    element={isSignedIn ? <DashboardPage progressData={progressData} onFastingSessionEnd={handleFastingSessionEnd} /> : <Navigate to="/" />} 
-                />
-                <Route 
-                    path="/profile" 
-                    element={isSignedIn ? <ProfileForm userId={user.id} /> : <Navigate to="/" />} 
-                />
-                <Route 
-                    path="/hydration" 
-                    element={isSignedIn ? <HydrationReminder userId={user.id} /> : <Navigate to="/" />} 
-                />
-                <Route 
-                    path="/progress" 
-                    element={isSignedIn ? <ProgressTracker data={progressData} /> : <Navigate to="/" />} 
-                />
-                <Route 
-                    path="/fasting" 
-                    element={isSignedIn ? <FastingTimer userId={user.id} onFastingSessionEnd={handleFastingSessionEnd} /> : <Navigate to="/" />} 
-                />
-                <Route 
-                    path="/journal" 
-                    element={isSignedIn ? <FastingJournal /> : <Navigate to="/" />} 
-                />
-            </Routes>
+                <Navigation openStressChecker={openStressChecker} />
+                <Modal isOpen={isStressCheckerOpen} onClose={closeStressChecker}>
+                    <StressChecker />
+                </Modal>
+                <Routes>
+                    <Route 
+                        path="/" 
+                        element={isSignedIn ? <Navigate to="/dashboard" /> : <LandingPage />} 
+                    />
+                    
+                    <Route path="/sign-up" element={<SignUpPage />} />
+                    <Route path="/sign-in" element={<SignInPage />} />
+                    <Route 
+                        path="/dashboard" 
+                        element={isSignedIn ? <DashboardPage progressData={progressData} onFastingSessionEnd={handleFastingSessionEnd} /> : <Navigate to="/" />} 
+                    />
+                    <Route 
+                        path="/profile" 
+                        element={isSignedIn ? <ProfileForm userId={user.id} /> : <Navigate to="/" />} 
+                    />
+                    <Route 
+                        path="/hydration" 
+                        element={isSignedIn ? <HydrationReminder userId={user.id} /> : <Navigate to="/" />} 
+                    />
+                    <Route 
+                        path="/progress" 
+                        element={isSignedIn ? <ProgressTracker data={progressData} /> : <Navigate to="/" />} 
+                    />
+                    <Route 
+                        path="/fasting" 
+                        element={isSignedIn ? <FastingTimer userId={user.id} onFastingSessionEnd={handleFastingSessionEnd} /> : <Navigate to="/" />} 
+                    />
+                    <Route 
+                        path="/journal" 
+                        element={isSignedIn ? <FastingJournal /> : <Navigate to="/" />} 
+                    />
+                </Routes>
+            </Suspense>
         </Router>
     );
 }

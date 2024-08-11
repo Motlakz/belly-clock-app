@@ -1,11 +1,12 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import Card from '../components/Card';
-import SuggestionsModal from '../components/SuggestionsModal';
+import React, { useState, useEffect, useCallback, Suspense, lazy } from 'react';
 import { FastingHistory, generateFastingSuggestions, UserProfile } from '../lib/fastingSuggestions';
 import { fastingTypes } from '../lib/fastingMethods';
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from '../firebase';
 import { useUser } from '@clerk/clerk-react';
+
+const Card = lazy(() => import('../components/Card'));
+const SuggestionsModal = lazy(() => import('../components/SuggestionsModal'));
 
 interface ProgressData {
     date: string;
@@ -66,59 +67,63 @@ const DashboardPage: React.FC<DashboardPageProps> = () => {
     }, [user]);
 
     return (
-        <div className="sm:px-12 px-8 py-8 bg-gradient-to-br from-violet-50 via-purple-50 to-indigo-50 min-h-screen mt-16 sm:mt-20">
+        <div className="sm:px-12 px-8 py-8 bg-gradient-to-br from-violet-50 via-purple-50 to-indigo-50 min-h-screen mt-16 sm:mt-20 rounded-t-xl">
             <article className="text-center text-gray-700">
                 <h1 className="text-3xl font-bold mb-8 text-center text-slate-500">Your Fasting Dashboard</h1>
                 <p className="text-lg mb-6">Pick any card below for your Quick Start.</p>
             </article>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <div>
-                    <Card
-                        title="Fasting Timer"
-                        description="Track your fasting sessions and manage your time effectively."
-                        link="/fasting"
-                        imageUrl="/src/assets/fasting.png"
-                        gradient="bg-gradient-to-br from-cyan-400 to-teal-400"
-                    />
-                </div>
-                
-                <div>
-                    <Card
-                        title="Hydration Reminder"
-                        description="Stay hydrated with timely reminders."
-                        link="/hydration"
-                        imageUrl="/src/assets/hydration.png"
-                        gradient="bg-gradient-to-br from-blue-200 to-blue-400"
-                    />
-                </div>
-                
-                <div>
-                    <Card
-                        title="Progress Tracker"
-                        description="Monitor your fasting progress over time."
-                        link="/progress"
-                        imageUrl="/src/assets/progress.png"
-                        gradient="bg-gradient-to-br from-purple-200 to-indigo-400"
-                    />
-                </div>
+            <div className="sm:grid sm:grid-cols-2 gap-8">
+                <Suspense fallback={<div>Loading...</div>}>
+                    <div>
+                        <Card
+                            title="Fasting Timer"
+                            description="Track your fasting sessions and manage your time effectively."
+                            link="/fasting"
+                            imageUrl="/src/assets/fasting.png"
+                            gradient="bg-gradient-to-br from-cyan-400 to-teal-400"
+                        />
+                    </div>
+                    
+                    <div>
+                        <Card
+                            title="Hydration Reminder"
+                            description="Stay hydrated with timely reminders."
+                            link="/hydration"
+                            imageUrl="/src/assets/hydration.png"
+                            gradient="bg-gradient-to-br from-blue-200 to-blue-400"
+                        />
+                    </div>
+                    
+                    <div>
+                        <Card
+                            title="Progress Tracker"
+                            description="Monitor your fasting progress over time."
+                            link="/progress"
+                            imageUrl="/src/assets/progress.png"
+                            gradient="bg-gradient-to-br from-purple-200 to-indigo-400"
+                        />
+                    </div>
 
-                <div>
-                    <Card
-                        title="Fasting Journal"
-                        description="Write any thoughts and experiences you have throughout your journey."
-                        link="/journal"
-                        imageUrl="/src/assets/journal.png"
-                        gradient="bg-gradient-to-br from-yellow-200 to-orange-400"
-                    />
-                </div>
+                    <div>
+                        <Card
+                            title="Fasting Journal"
+                            description="Write any thoughts and experiences you have throughout your journey."
+                            link="/journal"
+                            imageUrl="/src/assets/journal.png"
+                            gradient="bg-gradient-to-br from-yellow-200 to-orange-400"
+                        />
+                    </div>
+                </Suspense>
             </div>
 
-            <SuggestionsModal
-                isOpen={isSuggestionsModalOpen}
-                onClose={() => setIsSuggestionsModalOpen(false)}
-                generateSuggestions={generateSuggestions}
-            />
+            <Suspense fallback={<div>Loading...</div>}>
+                <SuggestionsModal
+                    isOpen={isSuggestionsModalOpen}
+                    onClose={() => setIsSuggestionsModalOpen(false)}
+                    generateSuggestions={generateSuggestions}
+                />
+            </Suspense>
         </div>
     );
 };
