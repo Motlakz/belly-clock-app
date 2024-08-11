@@ -12,7 +12,7 @@ interface SubscriptionCardProps {
 export function SubscriptionCard({ title, price, features, isSelected, onClick }: SubscriptionCardProps) {
     return (
         <motion.div
-            className={`border rounded-lg p-6 ${
+            className={`border rounded-lg p-6 max-w-80 w-full ${
                 isSelected ? 'border-orange-500 bg-orange-100' : 'border-orange-200'
             }`}
             whileHover={{ scale: 1.05 }}

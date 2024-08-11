@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, Suspense, lazy } from 'react';
 import { FastingHistory, generateFastingSuggestions, UserProfile } from '../lib/fastingSuggestions';
-import { fastingTypes } from '../lib/fastingMethods';
-import { doc, getDoc } from 'firebase/firestore';
+import { FastingType, fastingTypes } from '../lib/fastingMethods';
+import { doc, getDoc, setDoc, Timestamp } from 'firebase/firestore';
 import { db } from '../firebase';
 import { useUser } from '@clerk/clerk-react';
 
@@ -18,7 +18,7 @@ interface DashboardPageProps {
     onFastingSessionEnd: (duration: number, method: string) => Promise<void>;
 }
 
-const DashboardPage: React.FC<DashboardPageProps> = () => {
+const DashboardPage: React.FC<DashboardPageProps> = ({ progressData }) => {
     const [isSuggestionsModalOpen, setIsSuggestionsModalOpen] = useState(false);
     const { user } = useUser();
 
@@ -44,27 +44,54 @@ const DashboardPage: React.FC<DashboardPageProps> = () => {
                     consistency: userData.consistency || 0,
                 };
                 
-                const currentFastingType = fastingTypes.find(type => type.name === userData.currentFastingType) || fastingTypes[0];
+                const currentFastingType: FastingType = fastingTypes.find(type => type.name === userData.currentFastingType) || fastingTypes[0];
                 
-                return generateFastingSuggestions(profile, history, currentFastingType);
+                // Assuming progressData is available in the component's props
+                return generateFastingSuggestions(profile, history, currentFastingType, progressData);
             }
         }
         return [];
+    }, [user, progressData]);
+
+    const checkAndOpenModal = useCallback(async () => {
+        if (!user) return;
+
+        const userDocRef = doc(db, 'users', user.id);
+        const userDoc = await getDoc(userDocRef);
+
+        if (userDoc.exists()) {
+            const userData = userDoc.data();
+            const lastShownTimes = userData.lastShownTimes || [];
+
+            const now = Timestamp.now();
+            const eightHoursAgo = Timestamp.fromMillis(now.toMillis() - 8 * 60 * 60 * 1000);
+
+            // Filter out times older than 24 hours
+            const recentTimes = lastShownTimes.filter((time: Timestamp) => 
+                time.toMillis() > now.toMillis() - 24 * 60 * 60 * 1000
+            );
+
+            if (recentTimes.length < 3 && (!recentTimes.length || recentTimes[recentTimes.length - 1].toMillis() < eightHoursAgo.toMillis())) {
+                setIsSuggestionsModalOpen(true);
+                recentTimes.push(now);
+
+                // Update the user document with the new lastShownTimes
+                await setDoc(userDocRef, { lastShownTimes: recentTimes }, { merge: true });
+            }
+        } else {
+            // If the user document doesn't exist, create it
+            await setDoc(userDocRef, { lastShownTimes: [Timestamp.now()] });
+            setIsSuggestionsModalOpen(true);
+        }
     }, [user]);
 
     useEffect(() => {
-        const checkAndOpenModal = async () => {
-            const lastShownDate = localStorage.getItem('lastShownDate');
-            const today = new Date().toISOString().split('T')[0];
-
-            if (lastShownDate !== today) {
-                setIsSuggestionsModalOpen(true);
-                localStorage.setItem('lastShownDate', today);
-            }
-        };
-
-        checkAndOpenModal();
-    }, [user]);
+        if (user) {
+            checkAndOpenModal();
+            const intervalId = setInterval(checkAndOpenModal, 60000); // Check every minute
+            return () => clearInterval(intervalId);
+        }
+    }, [user, checkAndOpenModal]);
 
     return (
         <div className="sm:px-12 px-8 py-8 bg-gradient-to-br from-violet-50 via-purple-50 to-indigo-50 min-h-screen mt-16 sm:mt-20 rounded-t-xl">
@@ -122,6 +149,7 @@ const DashboardPage: React.FC<DashboardPageProps> = () => {
                     isOpen={isSuggestionsModalOpen}
                     onClose={() => setIsSuggestionsModalOpen(false)}
                     generateSuggestions={generateSuggestions}
+                    progressData={progressData}
                 />
             </Suspense>
         </div>

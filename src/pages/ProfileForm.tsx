@@ -1,8 +1,8 @@
 import React, { useState, useEffect, ChangeEvent, FormEvent } from "react";
 import { useUser } from "@clerk/clerk-react";
 import { AnimatePresence, motion } from "framer-motion";
-import { GiPerson, GiSandsOfTime, GiWaterDrop, GiChart, GiPadlock } from "react-icons/gi";
-import { FaBell, FaEdit, FaEnvelope, FaSmile, FaTrash, FaUserEdit } from "react-icons/fa";
+import { GiPerson, GiPadlock } from "react-icons/gi";
+import { FaEdit, FaEnvelope, FaTrash, FaUserEdit } from "react-icons/fa";
 import { fastingTypes, FastingType } from "../lib/fastingMethods";
 import CommunitySection from "../components/CommunitySection";
 import AdvancedSection from "../components/AdvancedSection";
@@ -28,7 +28,7 @@ interface ExtendedUserProfile extends UserProfile {
     aiCoachEnabled?: boolean;
     voiceCommandsEnabled?: boolean;
     stressMoodTracking?: boolean;
-    subscriptionTier?: "free" | "premium";
+    subscriptionTier?: "free" | "premium" | "family";
     fastingPreferences?: {
         preferredMethod?: string;
         customFastingWindow?: { start: string; end: string };
@@ -133,47 +133,6 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ userId }) => {
         }));
     };
 
-    const handleFastingTypeChange = async (option: { value: string, label: string }) => {
-        const newFastingType = fastingTypes.find(type => type.name === option.value);
-        if (newFastingType && userId) {
-            try {
-                // Update local state
-                setSelectedFastingType(newFastingType);
-                setProfile(prev => ({
-                    ...prev,
-                    fastingPreferences: {
-                        ...prev.fastingPreferences,
-                        preferredMethod: newFastingType.name,
-                    }
-                }));
-    
-                // Update Firestore
-                const userDocRef = doc(db, "users", userId);
-                await setDoc(userDocRef, {
-                    fastingPreferences: {
-                        preferredMethod: newFastingType.name,
-                    }
-                }, { merge: true });
-    
-                console.log("Fasting preference updated successfully");
-            } catch (error) {
-                console.error("Error updating fasting preference:", error);
-                alert("An error occurred while updating your fasting preference. Please try again.");
-            }
-        }
-    };
-
-    const handleCustomFastingWindowChange = (e: ChangeEvent<HTMLInputElement>) => {
-        const { id, value } = e.target;
-        setProfile((prevProfile) => ({
-            ...prevProfile,
-            customFastingWindow: {
-                ...prevProfile.customFastingWindow,
-                [id]: value,
-            } as { start: string; end: string },
-        }));
-    };
-
     const handleDeleteAccount = async () => {
         const confirmed = confirm("Are you sure you want to delete your account? This action cannot be undone.");
         if (confirmed) {
@@ -197,7 +156,7 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ userId }) => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
-            className="bg-gradient-to-br from-orange-100 to-yellow-100 p-8 rounded-lg shadow-lg max-w-4xl mx-auto mt-16 sm:mt-36"
+            className="bg-gradient-to-br from-orange-100 to-yellow-100 p-8 rounded-lg shadow-lg max-w-4xl mx-auto my-16 sm:my-20"
         >
             <motion.h2
                 className="text-4xl font-bold mb-6 text-orange-600 text-center"
@@ -209,7 +168,7 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ userId }) => {
             </motion.h2>
 
             <div className="flex mb-6 space-x-2 justify-center">
-                {["general", "health", "fasting", "tracking", "community", "advanced", "subscription"].map((tab) => (
+                {["general", "health", "community", "advanced", "subscription"].map((tab) => (
                     <motion.button
                         key={tab}
                         onClick={() => setActiveTab(tab)}
@@ -409,131 +368,6 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ userId }) => {
                     )}
                 </motion.div>
 
-                <motion.div
-                    variants={contentVariants}
-                    initial="hidden"
-                    animate={activeTab === "fasting" ? "visible" : "hidden"}
-                >
-                    {activeTab === "fasting" && (
-                        <div className="bg-orange-50 p-6 rounded-lg shadow-lg">
-                            <div className="flex items-center space-x-4 mb-6">
-                                <GiSandsOfTime className="text-orange-500 text-3xl" />
-                                <h3 className="text-2xl font-semibold text-orange-600">Fasting Preferences</h3>
-                            </div>
-                            <div className="space-y-6">
-                                <div>
-                                <MotionSelect
-                                    options={fastingTypes.map(type => ({ value: type.name, label: `${type.icon} ${type.name}` }))}
-                                    selectedOption={{ value: selectedFastingType.name, label: `${selectedFastingType.icon} ${selectedFastingType.name}` }}
-                                    onSelect={handleFastingTypeChange}
-                                    label="Preferred Fasting Method"
-                                />
-                                </div>
-                                {profile.preferredMethod === "custom" && (
-                                    <motion.div 
-                                        className="grid grid-cols-2 gap-4"
-                                        initial={{ opacity: 0, y: -20 }}
-                                        animate={{ opacity: 1, y: 0 }}
-                                        transition={{ duration: 0.3 }}
-                                    >
-                                        <div>
-                                            <label className="block text-orange-700 font-medium mb-2">Custom Fast Start:</label>
-                                            <motion.input
-                                                type="time"
-                                                id="start"
-                                                value={profile.customFastingWindow?.start || ''}
-                                                onChange={handleCustomFastingWindowChange}
-                                                className="w-full p-2 rounded-md border-orange-300 bg-white shadow-sm focus:border-orange-400 focus:ring focus:ring-orange-200 focus:ring-opacity-50"
-                                                whileFocus={{ scale: 1.02 }}
-                                            />
-                                        </div>
-                                        <div>
-                                            <label className="block text-orange-700 font-medium mb-2">Custom Fast End:</label>
-                                            <motion.input
-                                                type="time"
-                                                id="end"
-                                                value={profile.customFastingWindow?.end || ''}
-                                                onChange={handleCustomFastingWindowChange}
-                                                className="w-full p-2 rounded-md border-orange-300 bg-white shadow-sm focus:border-orange-400 focus:ring focus:ring-orange-200 focus:ring-opacity-50"
-                                                whileFocus={{ scale: 1.02 }}
-                                            />
-                                        </div>
-                                    </motion.div>
-                                )}
-                            </div>
-                        </div>
-                    )}
-                </motion.div>
-
-                <motion.div
-                    variants={contentVariants}
-                    initial="hidden"
-                    animate={activeTab === "tracking" ? "visible" : "hidden"}
-                    className="bg-orange-50 p-6 rounded-lg shadow-lg"
-                >
-                    {activeTab === "tracking" && (
-                        <>
-                            <div className="flex items-center space-x-4 mb-6">
-                                <GiChart className="text-orange-500 text-3xl" />
-                                <h3 className="text-2xl font-semibold text-orange-600">Tracking & Reminders</h3>
-                            </div>
-                            <div className="space-y-6">
-                                <div>
-                                    <label className="block mb-2">
-                                        <div className="flex items-center space-x-2 text-orange-700 font-medium">
-                                            <FaBell className="text-orange-500" />
-                                            <span>Reminder Frequency (hours):</span>
-                                        </div>
-                                    </label>
-                                    <motion.input
-                                        type="range"
-                                        id="reminderFrequency"
-                                        min="1"
-                                        max="24"
-                                        value={profile.reminderFrequency || '4'}
-                                        onChange={handleInputChange}
-                                        className="w-full h-2 bg-orange-200 rounded-lg appearance-none cursor-pointer"
-                                        whileFocus={{ scale: 1.02 }}
-                                    />
-                                    <div className="flex justify-between text-sm text-orange-600 mt-1">
-                                        <span>1h</span>
-                                        <span className="font-bold">{profile.reminderFrequency || '4'}h</span>
-                                        <span>24h</span>
-                                    </div>
-                                </div>
-                                <div className="flex items-center space-x-3">
-                                    <motion.input
-                                        type="checkbox"
-                                        id="hydrationReminders"
-                                        checked={profile.hydrationReminders || false}
-                                        onChange={handleInputChange}
-                                        className="form-checkbox h-5 w-5 text-orange-500 rounded border-orange-300 focus:ring-orange-200"
-                                        whileHover={{ scale: 1.1 }}
-                                    />
-                                    <label htmlFor="hydrationReminders" className="flex items-center space-x-2 text-orange-700 cursor-pointer">
-                                        <GiWaterDrop className="text-blue-500" />
-                                        <span>Enable Hydration Reminders</span>
-                                    </label>
-                                </div>
-                                <div className="flex items-center space-x-3">
-                                    <motion.input
-                                        type="checkbox"
-                                        id="stressMoodTracking"
-                                        checked={profile.stressMoodTracking || false}
-                                        onChange={handleInputChange}
-                                        className="form-checkbox h-5 w-5 text-orange-500 rounded border-orange-300 focus:ring-orange-200"
-                                        whileHover={{ scale: 1.1 }}
-                                    />
-                                    <label htmlFor="stressMoodTracking" className="flex items-center space-x-2 text-orange-700 cursor-pointer">
-                                        <FaSmile className="text-yellow-500" />
-                                        <span>Enable Stress & Mood Tracking</span>
-                                    </label>
-                                </div>
-                            </div>
-                        </>
-                    )}
-                </motion.div>
-
                 <CommunitySection 
                     activeTab={activeTab}
                     profile={profile}
@@ -559,7 +393,7 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ userId }) => {
                             </div>
                             <div className="space-y-6">
                                 <p className="text-orange-700 font-medium">Current Subscription Tier:</p>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div className="flex flex-wrap justify-center gap-6">
                                     <SubscriptionCard
                                         title="Free"
                                         price="$0/month"
@@ -583,6 +417,19 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ userId }) => {
                                             "Priority support",
                                         ]}
                                         isSelected={profile.subscriptionTier === 'premium'}
+                                        onClick={() => setProfile({ ...profile, subscriptionTier: 'premium' })}
+                                    />
+                                    <SubscriptionCard
+                                        title="Family"
+                                        price="$9.99/mo"
+                                        features={[
+                                        "All Premium features",
+                                        "Up to 5 family members",
+                                        "Shared progress tracking",
+                                        "Family challenges",
+                                        "Personalized meal plans",
+                                        ]}
+                                        isSelected={profile.subscriptionTier === 'family'}
                                         onClick={() => setProfile({ ...profile, subscriptionTier: 'premium' })}
                                     />
                                 </div>

@@ -1,14 +1,15 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { ProgressData } from '../lib/fastingSuggestions';
 
 interface SuggestionsModalProps {
     isOpen: boolean;
     onClose: () => void;
     generateSuggestions: () => Promise<string[]>;
+    progressData: ProgressData[];
 }
 
 const SuggestionsModal: React.FC<SuggestionsModalProps> = ({ isOpen, onClose, generateSuggestions }) => {
-    const [showModal, setShowModal] = useState(false);
     const [suggestions, setSuggestions] = useState<string[]>([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -28,19 +29,14 @@ const SuggestionsModal: React.FC<SuggestionsModalProps> = ({ isOpen, onClose, ge
     }, [generateSuggestions]);
 
     useEffect(() => {
-        const lastShownDate = localStorage.getItem('lastShownDate');
-        const today = new Date().toISOString().split('T')[0];
-
-        if (lastShownDate !== today) {
-            setShowModal(true);
-            localStorage.setItem('lastShownDate', today);
+        if (isOpen) {
             loadSuggestions();
         }
-    }, [loadSuggestions]);
+    }, [isOpen, loadSuggestions]);
 
     return (
         <AnimatePresence>
-            {showModal && isOpen && (
+            {isOpen && (
                 <motion.div
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
@@ -51,7 +47,7 @@ const SuggestionsModal: React.FC<SuggestionsModalProps> = ({ isOpen, onClose, ge
                         initial={{ y: 50, opacity: 0 }}
                         animate={{ y: 0, opacity: 1 }}
                         exit={{ y: 50, opacity: 0 }}
-                        className="bg-white rounded-lg p-6 max-w-md w-full"
+                        className="bg-white rounded-lg p-6 max-w-md w-full max-h-[60vh] overflow-y-auto"
                     >
                         <h2 className="text-2xl font-bold mb-4">Your Fasting Suggestions</h2>
                         {loading && (
@@ -74,10 +70,7 @@ const SuggestionsModal: React.FC<SuggestionsModalProps> = ({ isOpen, onClose, ge
                             <p className="mb-4">No suggestions available at the moment.</p>
                         )}
                         <button
-                            onClick={() => {
-                                onClose();
-                                setShowModal(false);
-                            }}
+                            onClick={onClose}
                             className="bg-purple-500 text-white px-4 py-2 rounded hover:bg-purple-600 transition-colors"
                         >
                             Close
