@@ -6,6 +6,10 @@ import { db } from '../firebase';
 import { useUser } from '@clerk/clerk-react';
 import Card from '../components/Card';
 import SuggestionsModal from '../components/SuggestionsModal';
+import fastingImage from '../assets/fasting.png';
+import hydrationImage from '../assets/hydration.png';
+import progressImage from '../assets/progress.png';
+import journalImage from '../assets/journal.png';
 
 interface ProgressData {
     date: string;
@@ -87,7 +91,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ progressData }) => {
     useEffect(() => {
         if (user) {
             checkAndOpenModal();
-            const intervalId = setInterval(checkAndOpenModal, 60000); // Check every minute
+            const intervalId = setInterval(checkAndOpenModal, 60000);
             return () => clearInterval(intervalId);
         }
     }, [user, checkAndOpenModal]);
@@ -106,7 +110,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ progressData }) => {
                             title="Fasting Timer"
                             description="Track your fasting sessions and manage your time effectively."
                             link="/fasting"
-                            imageUrl="/src/assets/fasting.png"
+                            imageUrl={fastingImage}
                             gradient="bg-gradient-to-br from-cyan-400 to-teal-400"
                         />
                     </div>
@@ -116,7 +120,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ progressData }) => {
                             title="Hydration Reminder"
                             description="Stay hydrated with timely reminders."
                             link="/hydration"
-                            imageUrl="/src/assets/hydration.png"
+                            imageUrl={hydrationImage}
                             gradient="bg-gradient-to-br from-blue-200 to-blue-400"
                         />
                     </div>
@@ -126,7 +130,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ progressData }) => {
                             title="Progress Tracker"
                             description="Monitor your fasting progress over time."
                             link="/progress"
-                            imageUrl="/src/assets/progress.png"
+                            imageUrl={progressImage}
                             gradient="bg-gradient-to-br from-purple-200 to-indigo-400"
                         />
                     </div>
@@ -136,7 +140,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ progressData }) => {
                             title="Fasting Journal"
                             description="Write any thoughts and experiences you have throughout your journey."
                             link="/journal"
-                            imageUrl="/src/assets/journal.png"
+                            imageUrl={journalImage}
                             gradient="bg-gradient-to-br from-yellow-200 to-orange-400"
                         />
                     </div>
