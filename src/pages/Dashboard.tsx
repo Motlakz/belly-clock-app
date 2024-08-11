@@ -103,7 +103,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ progressData }) => {
                 <p className="text-lg mb-6">Pick any card below for your Quick Start.</p>
             </article>
             
-            <div className="sm:grid sm:grid-cols-2 gap-8">
+            <div className="grid sm:grid-cols-2 grid-cols-1 gap-8">
                 <Suspense fallback={<div>Loading...</div>}>
                     <div>
                         <Card
