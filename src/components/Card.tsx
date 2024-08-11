@@ -15,7 +15,7 @@ const Card: React.FC<CardProps> = React.memo(({ title, description, link, imageU
         <motion.div
             whileHover={{ scale: 1.02, boxShadow: "0 10px 20px rgba(0, 0, 0, 0.3)" }}
             transition={{ type: 'spring', stiffness: 300 }}
-            className={`relative block p-6 ${gradient} bg-opacity-30 max-w-lg w-full rounded-3xl shadow-lg border border-white border-opacity-30 overflow-hidden`}
+            className={`relative block p-6 ${gradient} bg-opacity-30 rounded-3xl shadow-lg border border-white border-opacity-30 overflow-hidden`}
         >
             <Link to={link} target="_blank" className="block">
                 <img src={imageUrl} alt={title} className="max-h-80 object-cover rounded-3xl mb-4" width="100%" height="100%" />
