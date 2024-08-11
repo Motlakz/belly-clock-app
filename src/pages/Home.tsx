@@ -48,7 +48,7 @@ const InteractiveButton: React.FC = () => (
         ⏳
       </motion.span>
       
-      Start Your Fasting Journey
+      <a href="/sign-up">Start Your Fasting Journey</a>
     </motion.button>
   );  
   
@@ -101,7 +101,7 @@ const LandingPage: React.FC = () => {
                 <h2 className="sm:text-4xl text-2xl font-bold mb-12 text-center text-purple-800">
                     Powerful Features for Intermittent Fasting Success
                 </h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                     {[
                         { icon: '⏱️', title: 'Fasting Hours Calculator', description: 'Optimize your fasting windows for maximum weight loss', color: 'from-teal-400 to-cyan-300' },
                         { icon: '📊', title: 'Weight Loss Tracker', description: 'Visualize your fasting weight loss journey with advanced analytics', color: 'from-indigo-400 to-purple-300' },

@@ -1,26 +1,32 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FaClock, FaWeight, FaBolt, FaBrain, FaCarrot, FaBreadSlice, FaLeaf } from 'react-icons/fa';
+import { FaClock, FaWeight, FaBolt, FaBrain, FaCarrot, FaBreadSlice, FaLeaf, FaMoon, FaHamburger } from 'react-icons/fa';
 
 const FastingPlanWithQuiz = () => {
     const [step, setStep] = useState(1);
-    const [fastingTime, setFastingTime] = useState(16);
     const [goal, setGoal] = useState('');
     const [dietaryRestrictions, setDietaryRestrictions] = useState('');
+    const [fastingType, setFastingType] = useState('');
 
-    const handleNext = () => setStep(step + 1);
     const handlePrevious = () => setStep(step - 1);
+
+    const fastingTypes = [
+        { icon: <FaClock />, text: 'Intermittent Fasting' },
+        { icon: <FaMoon />, text: 'Ramadan Fasting' },
+    ];
 
     const goals = [
         { icon: <FaWeight />, text: 'Weight Loss' },
         { icon: <FaBolt />, text: 'Increase Energy' },
         { icon: <FaBrain />, text: 'Improved Focus' },
+        { icon: <FaMoon />, text: 'Spiritual Growth' },
     ];
 
     const dietaryOptions = [
         { icon: <FaCarrot />, text: 'Vegan' },
         { icon: <FaLeaf />, text: 'Vegetarian' },
         { icon: <FaBreadSlice />, text: 'Gluten-Free' },
+        { icon: <FaHamburger />, text: 'Halal' },
         { icon: null, text: 'None' },
     ];
 
@@ -40,6 +46,12 @@ const FastingPlanWithQuiz = () => {
             opacity: 0,
         }),
     };
+
+    useEffect(() => {
+        if (fastingType) {
+            setTimeout(() => setStep(2), 500);
+        }
+    }, [fastingType]);
 
     useEffect(() => {
         if (goal) {
@@ -81,39 +93,26 @@ const FastingPlanWithQuiz = () => {
                                 animate={{ y: 0, opacity: 1 }}
                                 transition={{ delay: 0.2 }}
                             >
-                                <FaClock className="inline-block mr-2 mb-1" />
-                                How many hours do you typically fast?
+                                What type of fasting are you interested in?
                             </motion.h3>
-                            <motion.div 
-                                className="flex items-center justify-center mb-8"
-                                initial={{ scale: 0.8, opacity: 0 }}
-                                animate={{ scale: 1, opacity: 1 }}
-                                transition={{ delay: 0.4 }}
-                            >
-                                <button 
-                                    className="bg-indigo-600 text-white px-4 py-2 rounded-l-full transition-colors hover:bg-indigo-700"
-                                    onClick={() => setFastingTime(Math.max(12, fastingTime - 1))}
-                                >
-                                    -
-                                </button>
-                                <div className="bg-white text-indigo-600 px-8 py-2 font-bold text-xl">
-                                    {fastingTime} hours
-                                </div>
-                                <button 
-                                    className="bg-indigo-600 text-white px-4 py-2 rounded-r-full transition-colors hover:bg-indigo-700"
-                                    onClick={() => setFastingTime(Math.min(20, fastingTime + 1))}
-                                >
-                                    +
-                                </button>
-                            </motion.div>
-                            <motion.button
-                                className="bg-indigo-600 text-white py-2 px-6 rounded-full transition-colors hover:bg-indigo-700"
-                                onClick={handleNext}
-                                whileHover={{ scale: 1.05 }}
-                                whileTap={{ scale: 0.95 }}
-                            >
-                                Next
-                            </motion.button>
+                            <div className="grid grid-cols-1 gap-4">
+                                {fastingTypes.map((item, index) => (
+                                    <motion.button
+                                        key={item.text}
+                                        className={`mt-2 bg-indigo-600 text-white py-3 px-6 rounded-full flex items-center justify-center transition-colors ${
+                                            fastingType === item.text ? 'bg-indigo-400' : 'hover:bg-indigo-700'
+                                        }`}
+                                        onClick={() => setFastingType(item.text)}
+                                        whileHover={{ scale: 1.05 }}
+                                        initial={{ x: -50, opacity: 0 }}
+                                        animate={{ x: 0, opacity: 1 }}
+                                        transition={{ delay: 0.2 + index * 0.1 }}
+                                    >
+                                        {item.icon}
+                                        <span className="ml-2">{item.text}</span>
+                                    </motion.button>
+                                ))}
+                            </div>
                         </div>
                     )}
                     {step === 2 && (
