@@ -7,8 +7,8 @@ import { collection, getDocs, addDoc } from 'firebase/firestore';
 import LoadingScreen from "./components/LoadingScreen";
 import Modal from "./components/StressModal";
 import StressChecker from "./components/StressChecker";
+import DashboardPage from "./pages/Dashboard";
 
-const DashboardPage = lazy(() => import("./pages/Dashboard"));
 const ProfileForm = lazy(() => import("./pages/ProfileForm"));
 const HydrationReminder = lazy(() => import("./pages/HydrationReminder"));
 const ProgressTracker = lazy(() => import("./pages/ProgressTracker"));
