@@ -1,5 +1,5 @@
 import { useUser } from "@clerk/clerk-react";
-import { ProfileForm } from "../pages/ProfileForm";
+import ProfileForm from "../pages/ProfileForm";
 
 export default function ProfilePage() {
     const { user } = useUser();
