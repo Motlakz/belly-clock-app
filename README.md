@@ -1,6 +1,6 @@
 # Belly Clock - Intermittent Fasting Calculator
 
-Welcome to the *Belly Clock*, a web application designed to help users optimize their intermittent fasting journey with personalized tools and insights. This app combines the power of AI with a smooth, interactive user experience to guide users in achieving their health and weight loss goals.
+Welcome to *Belly Clock*, a web application designed to help users optimize their intermittent fasting journey with personalized tools and insights. This app combines the power of AI with a smooth, interactive user experience to guide users in achieving their health and weight loss goals.
 
 ## Table of Contents
 
