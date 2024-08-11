@@ -1,12 +1,11 @@
-import React, { useState, useEffect, useCallback, Suspense, lazy } from 'react';
+import React, { useState, useEffect, useCallback, Suspense } from 'react';
 import { FastingHistory, generateFastingSuggestions, UserProfile } from '../lib/fastingSuggestions';
 import { FastingType, fastingTypes } from '../lib/fastingMethods';
 import { doc, getDoc, setDoc, Timestamp } from 'firebase/firestore';
 import { db } from '../firebase';
 import { useUser } from '@clerk/clerk-react';
-
-const Card = lazy(() => import('../components/Card'));
-const SuggestionsModal = lazy(() => import('../components/SuggestionsModal'));
+import Card from '../components/Card';
+import SuggestionsModal from '../components/SuggestionsModal';
 
 interface ProgressData {
     date: string;
