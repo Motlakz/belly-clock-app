@@ -63,6 +63,40 @@ const FastingTimer: React.FC<FastingTimerProps> = ({ userId, onFastingSessionEnd
     }, [userId]);
 
     useEffect(() => {
+        let soundTimeout: NodeJS.Timeout | null = null;
+    
+        const playSoundWithDelay = () => {
+            if (isActive) {
+                playSound('start');
+                // Schedule the next play after the sound duration
+                soundTimeout = setTimeout(playSoundWithDelay, 11000);
+            }
+        };
+    
+        if (isActive) {
+            playSoundWithDelay();
+        } else {
+            if (audioRef.current) {
+                audioRef.current.pause();
+                audioRef.current.currentTime = 0;
+            }
+            if (soundTimeout) {
+                clearTimeout(soundTimeout);
+            }
+        }
+    
+        return () => {
+            if (soundTimeout) {
+                clearTimeout(soundTimeout);
+            }
+            if (audioRef.current) {
+                audioRef.current.pause();
+                audioRef.current.currentTime = 0;
+            }
+        };
+    }, [isActive]);
+
+    useEffect(() => {
         const userDocRef = doc(db, 'users', userId);
         const unsubscribe = onSnapshot(userDocRef, (doc) => {
             if (doc.exists()) {
@@ -133,6 +167,10 @@ const FastingTimer: React.FC<FastingTimerProps> = ({ userId, onFastingSessionEnd
         if (isActive) {
             await stopFastingSession();
             setIsActive(false);
+            if (audioRef.current) {
+                audioRef.current.pause();
+                audioRef.current.currentTime = 0;
+            }
         } else {
             const now = new Date();
             if (startTime) {
@@ -143,7 +181,6 @@ const FastingTimer: React.FC<FastingTimerProps> = ({ userId, onFastingSessionEnd
                 await startFastingSession(now);
             }
             setIsActive(true);
-            playSound('start');
         }
     };
 
@@ -207,7 +244,11 @@ const FastingTimer: React.FC<FastingTimerProps> = ({ userId, onFastingSessionEnd
         setTime(0);
         setStartTime(null);
         playSound('reset');
-
+        if (audioRef.current) {
+            audioRef.current.pause();
+            audioRef.current.currentTime = 0;
+        }
+    
         if (sessionId) {
             await stopFastingSession();
             onFastingSessionEnd(time, selectedFastingType.name);
@@ -380,6 +421,7 @@ const FastingTimer: React.FC<FastingTimerProps> = ({ userId, onFastingSessionEnd
                         <h3 className="text-lg font-semibold text-white">🚀 Fasting Time Optimizer</h3>
                         {showOptimizerPanel ? <ChevronUp size={20} color="white" /> : <ChevronDown size={20} color="white" />}
                     </div>
+                    <p className="mb-4 text-white">Maximize your fasting benefits with our AI-generated personalized schedule.</p>
                     {showOptimizerPanel && (
                         <motion.div
                             initial={{ opacity: 0, y: -10 }}
@@ -388,7 +430,6 @@ const FastingTimer: React.FC<FastingTimerProps> = ({ userId, onFastingSessionEnd
                             transition={{ duration: 0.2 }}
                             className="max-h-[70vh] overflow-y-auto"
                         >
-                            <p className="mb-4 text-white">Maximize your fasting benefits with our AI-generated personalized schedule.</p>
                             <button
                                 onClick={generateOptimizedSchedule}
                                 className="w-full bg-cyan-400/50 border mb-4 text-white px-4 py-2 rounded-lg hover:bg-opacity-90 transition-colors"

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { useEffect, useRef, useState, useMemo, useCallback } from 'react';
 import { SignedIn, SignedOut, UserButton, useUser } from '@clerk/clerk-react';
 import { Link } from 'react-scroll';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -6,46 +6,125 @@ import Logo from "../assets/BellyClockLogo.jpeg"
 import { FaBars, FaBell, FaUserAlt, FaUserCircle, FaWindowClose } from 'react-icons/fa';
 import { GiBrain } from 'react-icons/gi';
 import Notifications from './Notifications';
+import { collection, onSnapshot, query } from 'firebase/firestore';
+import { db } from '../firebase';
 
 interface NavigationProps {
     openStressChecker: () => void;
 }
-  
+
 const Navigation: React.FC<NavigationProps> = ({ openStressChecker }) => {
     const [isOpen, setIsOpen] = useState(false);
+    const audioRef = useRef<HTMLAudioElement | null>(null);
     const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
     const [notificationCount, setNotificationCount] = useState(0);
     const { user } = useUser();
+    const isFirstRender = useRef(true);
 
-    const toggleMenu = () => setIsOpen(!isOpen);
-    const toggleNotifications = () => setIsNotificationsOpen(!isNotificationsOpen);
+    const [lastSeenNotificationCount, setLastSeenNotificationCount] = useState(() => {
+        const saved = localStorage.getItem('lastSeenNotificationCount');
+        return saved ? parseInt(saved, 10) : 0;
+    });
 
+    const menuItems = useMemo(() => ['Features', 'Pricing', 'Quiz', 'Discover'], []);
+    const signedInLinks = useMemo(() => [{ name: 'Profile', path: '/profile' }], []);
 
-    const menuItems = ['Features', 'Pricing', 'Quiz', 'Discover'];
+    const toggleMenu = useCallback(() => setIsOpen(prev => !prev), []);
 
-    const signedInLinks = [
-        { name: 'Profile', path: '/profile' },
-    ];
+    const playNotificationSound = useCallback(() => {
+        if (audioRef.current) {
+            audioRef.current.src = '/sounds/notification-sound.wav';
+            audioRef.current.load();
+            audioRef.current.play().catch(error => {
+                console.error('Error playing sound:', error);
+                if (error.name === 'NotAllowedError') {
+                    const playAttempt = setInterval(() => {
+                        audioRef.current?.play()
+                            .then(() => {
+                                clearInterval(playAttempt);
+                            })
+                            .catch(() => {
+                                console.log("Auto-play still not allowed");
+                            });
+                    }, 60000);
+                }
+            });
+        }
+    }, []);
+
+    useEffect(() => {
+        if (!user) return;
+
+        const notificationsRef = collection(db, 'users', user.id, 'notifications');
+        const q = query(notificationsRef);
+
+        const unsubscribe = onSnapshot(q, (querySnapshot) => {
+            const newNotificationCount = querySnapshot.size;
+            
+            if (!isFirstRender.current && newNotificationCount > notificationCount && newNotificationCount > lastSeenNotificationCount) {
+                playNotificationSound();
+            }
+            
+            setNotificationCount(newNotificationCount);
+            isFirstRender.current = false;
+        });
+
+        return () => unsubscribe();
+    }, [user, notificationCount, lastSeenNotificationCount, playNotificationSound]);
+
+    const handleNotificationsViewed = useCallback(() => {
+        setLastSeenNotificationCount(notificationCount);
+        localStorage.setItem('lastSeenNotificationCount', notificationCount.toString());
+    }, [notificationCount]);
+
+    const toggleNotifications = useCallback(() => {
+        setIsNotificationsOpen(prev => !prev);
+        handleNotificationsViewed();
+    }, [handleNotificationsViewed]);
+
+    const renderMenuItems = useMemo(() => (
+        menuItems.map((item) => (
+            <Link
+                key={item}
+                to={item.toLowerCase()}
+                smooth={true}
+                duration={500}
+                className="text-lg font-semibold text-indigo-700 hover:text-indigo-800 hover:underline-offset-2 hover:underline rounded cursor-pointer transition-colors duration-300"
+            >
+                {item}
+            </Link>
+        ))
+    ), [menuItems]);
+
+    const renderSignedInLinks = useMemo(() => (
+        signedInLinks.map((link) => (
+            <motion.a
+                key={link.name}
+                href={link.path}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                className="flex gap-2 items-center bg-indigo-400 bg-opacity-80 text-white p-2 rounded-lg shadow-md hover:bg-indigo-500 transition-colors duration-300"
+            >
+                <FaUserCircle />
+                {link.name}
+            </motion.a>
+        ))
+    ), [signedInLinks]);
 
     return (
         <nav className="fixed top-0 left-0 z-20 w-full bg-indigo-100/50 backdrop-filter backdrop-blur-lg shadow-lg rounded-b-xl">
             <div className="container mx-auto flex items-center justify-between p-2">
-                <div className="text-2xl font-bold text-indigo-700"><a href="/"><img src={Logo} className="rounded-lg object-cover"  width="48px" height="40px" alt="Logo for fasting calculator" /></a></div>
+                <div className="text-2xl font-bold text-indigo-700">
+                    <a href="/">
+                        <img src={Logo} className="rounded-lg object-cover" width="48px" height="40px" alt="Logo for fasting calculator" />
+                    </a>
+                </div>
+                <audio ref={audioRef} />
                 
                 {/* Desktop Menu */}
                 <div className="hidden md:flex items-center space-x-6">
                     <SignedOut>
-                        {menuItems.map((item) => (
-                            <Link
-                                key={item}
-                                to={item.toLowerCase()}
-                                smooth={true}
-                                duration={500}
-                                className="text-lg font-semibold text-indigo-700 hover:text-indigo-800 hover:underline-offset-2 hover:underline rounded cursor-pointer transition-colors duration-300"
-                            >
-                                {item}
-                            </Link>
-                        ))}
+                        {renderMenuItems}
                     </SignedOut>
                 </div>
 
@@ -79,18 +158,7 @@ const Navigation: React.FC<NavigationProps> = ({ openStressChecker }) => {
                     </SignedOut>
                     <SignedIn>
                         <div className="flex items-center space-x-4">
-                            {signedInLinks.map((link) => (
-                                <motion.a
-                                    key={link.name}
-                                    href={link.path}
-                                    whileHover={{ scale: 1.05 }}
-                                    whileTap={{ scale: 0.95 }}
-                                    className="flex gap-2 items-center bg-indigo-400 bg-opacity-80 text-white p-2 rounded-lg shadow-md hover:bg-indigo-500 transition-colors duration-300"
-                                >
-                                    <FaUserCircle />
-                                    {link.name}
-                                </motion.a>
-                            ))}
+                            {renderSignedInLinks}
                             <div className="relative">
                                 <motion.button
                                     onClick={toggleNotifications}
@@ -99,9 +167,9 @@ const Navigation: React.FC<NavigationProps> = ({ openStressChecker }) => {
                                     className="bg-indigo-400 flex items-center gap-2 bg-opacity-80 text-white p-2 rounded-lg shadow-md hover:bg-indigo-500 transition-colors duration-300"
                                 >
                                     <FaBell size={16} /> Notifications
-                                    {notificationCount > 0 && (
+                                    {notificationCount > lastSeenNotificationCount && (
                                         <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
-                                            {notificationCount}
+                                            {notificationCount - lastSeenNotificationCount}
                                         </span>
                                     )}
                                 </motion.button>
@@ -110,11 +178,9 @@ const Navigation: React.FC<NavigationProps> = ({ openStressChecker }) => {
                                         userId={user.id}
                                         isOpen={isNotificationsOpen}
                                         onClose={toggleNotifications}
-                                        onNotificationCountChange={setNotificationCount}
                                     />
                                 )}
                             </div>
-
                             <motion.button
                                 whileHover={{ scale: 1.05 }}
                                 whileTap={{ scale: 0.95 }}
@@ -190,16 +256,20 @@ const Navigation: React.FC<NavigationProps> = ({ openStressChecker }) => {
                                             onClick={toggleNotifications}
                                             whileHover={{ scale: 1.05 }}
                                             whileTap={{ scale: 0.95 }}
-                                            className="bg-indigo-400 w-full justify-center flex items-center gap-2 bg-opacity-80 text-white px-4 py-2 rounded-lg shadow-md hover:bg-indigo-500 transition-colors duration-300"
+                                            className="bg-indigo-400 flex items-center justify-center w-full gap-2 bg-opacity-80 text-white p-2 rounded-lg shadow-md hover:bg-indigo-500 transition-colors duration-300"
                                         >
                                             <FaBell size={16} /> Notifications
+                                            {notificationCount > lastSeenNotificationCount && (
+                                                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                                                    {notificationCount - lastSeenNotificationCount}
+                                                </span>
+                                            )}
                                         </motion.button>
                                         {isNotificationsOpen && user && (
                                             <Notifications
                                                 userId={user.id}
                                                 isOpen={isNotificationsOpen}
                                                 onClose={toggleNotifications}
-                                                onNotificationCountChange={setNotificationCount}
                                             />
                                         )}
                                     </div>

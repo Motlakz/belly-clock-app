@@ -15,10 +15,9 @@ interface NotificationsProps {
     userId: string;
     isOpen: boolean;
     onClose: () => void;
-    onNotificationCountChange: (count: number) => void;
 }
 
-const Notifications: React.FC<NotificationsProps> = ({ userId, isOpen, onClose, onNotificationCountChange }) => {
+const Notifications: React.FC<NotificationsProps> = ({ userId, isOpen, onClose }) => {
     const [notifications, setNotifications] = useState<Notification[]>([]);
 
     useEffect(() => {
@@ -33,11 +32,10 @@ const Notifications: React.FC<NotificationsProps> = ({ userId, isOpen, onClose, 
                 notifs.push({ id: doc.id, ...doc.data() } as Notification);
             });
             setNotifications(notifs);
-            onNotificationCountChange(notifs.length);
         });
 
         return () => unsubscribe();
-    }, [userId, isOpen, onNotificationCountChange]);
+    }, [userId, isOpen]);
 
     const removeNotification = async (id: string) => {
         try {
