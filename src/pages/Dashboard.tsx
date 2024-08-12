@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, Suspense } from 'react';
-import { FastingHistory, generateFastingSuggestions, UserProfile } from '../lib/fastingSuggestions';
+import { FastingHistory, generateFastingSuggestions, ProgressData, UserProfile } from '../lib/fastingSuggestions';
 import { FastingType, fastingTypes } from '../lib/fastingMethods';
 import { doc, getDoc, setDoc, Timestamp } from 'firebase/firestore';
 import { db } from '../firebase';
@@ -12,11 +12,6 @@ import progressImage from '../assets/progress.png';
 import journalImage from '../assets/journal.png';
 import AppScreenLoading from '../components/AppScreen';
 import Loader from '../components/Loader';
-
-interface ProgressData {
-    date: string;
-    fastingHours: number;
-}
 
 interface DashboardPageProps {
     progressData: ProgressData[];

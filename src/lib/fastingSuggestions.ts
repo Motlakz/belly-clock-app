@@ -20,6 +20,7 @@ export interface FastingHistory {
 export interface ProgressData {
   date: string;
   fastingHours: number;
+  fastingMinutes: number;
 }
 
 export async function generateFastingSuggestions(

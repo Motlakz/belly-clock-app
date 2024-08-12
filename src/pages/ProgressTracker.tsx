@@ -27,19 +27,42 @@ ChartJS.register(
 interface ProgressData {
     date: string;
     fastingHours: number;
+    fastingMinutes: number;
 }
 
 const ProgressTracker: React.FC<{ data: ProgressData[] }> = ({ data }) => {
-    const validData = data.filter(item => !isNaN(item.fastingHours) && item.fastingHours > 0);
+    const transformedData = data.map(item => {
+        if (item.fastingHours && item.fastingHours < 1) {
+            return {
+                ...item,
+                fastingMinutes: item.fastingHours * 60, // Convert to minutes
+                fastingHours: 0 // Set hours to 0 to avoid showing it in the hours chart
+            };
+        }
+        return item;
+    });
+
+    const validData = transformedData.filter(item => 
+        (!isNaN(item.fastingHours) && item.fastingHours > 0) || 
+        (!isNaN(item.fastingMinutes) && item.fastingMinutes > 0)
+    );
 
     const lineChartData = {
         labels: validData.map(item => item.date),
         datasets: [
             {
                 label: 'Fasting Hours',
-                data: validData.map(item => item.fastingHours),
+                data: validData.map(item => item.fastingHours || 0),
                 borderColor: 'rgb(99, 102, 241)', // Indigo-500
                 backgroundColor: 'rgba(99, 102, 241, 0.5)',
+                tension: 0.1,
+                fill: true,
+            },
+            {
+                label: 'Fasting Minutes',
+                data: validData.map(item => item.fastingMinutes || 0),
+                borderColor: 'rgb(244, 114, 182)', // Pink-400
+                backgroundColor: 'rgba(244, 114, 182, 0.5)',
                 tension: 0.1,
                 fill: true,
             },
@@ -66,16 +89,25 @@ const ProgressTracker: React.FC<{ data: ProgressData[] }> = ({ data }) => {
     };
 
     const averageFastingHours = validData.length > 0
-        ? validData.reduce((sum, item) => sum + item.fastingHours, 0) / validData.length
+        ? validData.reduce((sum, item) => sum + (item.fastingHours || 0), 0) / validData.length
         : 0;
+
+    const averageFastingMinutes = validData.length > 0
+        ? validData.reduce((sum, item) => sum + (item.fastingMinutes || 0), 0) / validData.length
+        : 0;
+
+    const totalAverageFastingHours = averageFastingHours + (averageFastingMinutes / 60);
 
     const pieChartData = {
         labels: ['Fasting', 'Non-Fasting'],
         datasets: [
             {
-                data: [averageFastingHours, Math.max(0, 24 - averageFastingHours)],
-                backgroundColor: ['rgba(99, 102, 241, 0.8)', 'rgba(244, 114, 182, 0.8)'], // Indigo-500, Pink-400
-                borderColor: ['rgb(99, 102, 241)', 'rgb(244, 114, 182)'],
+                data: [
+                    totalAverageFastingHours,
+                    Math.max(0, 24 - totalAverageFastingHours),
+                ],
+                backgroundColor: ['rgba(99, 102, 241, 0.8)', 'rgba(244, 244, 244, 0.8)'], // Indigo-500, Gray
+                borderColor: ['rgb(99, 102, 241)', 'rgb(244, 244, 244)'],
                 borderWidth: 1,
             },
         ],
@@ -91,11 +123,27 @@ const ProgressTracker: React.FC<{ data: ProgressData[] }> = ({ data }) => {
                 display: true,
                 text: 'Average Daily Fasting Distribution',
             },
+            tooltip: {
+                callbacks: {
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                    label: function(context: any) {
+                        const label = context.label || '';
+                        const value = context.raw || 0;
+                        const hours = Math.floor(value);
+                        const minutes = Math.round((value - hours) * 60);
+                        return `${label}: ${hours}h ${minutes}m`;
+                    }
+                }
+            }
         },
     };
 
-    const longestFast = validData.length > 0
-        ? Math.max(...validData.map(item => item.fastingHours))
+    const longestFastHours = validData.length > 0
+        ? Math.max(...validData.map(item => item.fastingHours || 0))
+        : 0;
+
+    const longestFastMinutes = validData.length > 0
+        ? Math.max(...validData.map(item => item.fastingMinutes || 0))
         : 0;
 
     return (
@@ -171,10 +219,10 @@ const ProgressTracker: React.FC<{ data: ProgressData[] }> = ({ data }) => {
                         >
                             <h3 className="text-xl font-semibold mb-2 text-white">Fasting Stats</h3>
                             <p className="text-lg text-white">
-                                Average Fasting Hours: <span className="font-bold">{averageFastingHours.toFixed(2)}</span>
+                                Average Fasting Time: <span className="font-bold">{Math.floor(totalAverageFastingHours)}h {Math.round((totalAverageFastingHours % 1) * 60)}m</span>
                             </p>
                             <p className="text-lg text-white">
-                                Longest Fast: <span className="font-bold">{longestFast.toFixed(1)} hours</span>
+                                Longest Fast: <span className="font-bold">{Math.floor(longestFastHours)}h {Math.round(longestFastMinutes)}m</span>
                             </p>
                             <p className="text-lg text-white">
                                 Total Fasts: <span className="font-bold">{validData.length}</span>

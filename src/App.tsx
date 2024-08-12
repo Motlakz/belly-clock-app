@@ -8,6 +8,7 @@ import Modal from "./components/StressModal";
 import StressChecker from "./components/StressChecker";
 import DashboardPage from "./pages/Dashboard";
 import Loader from "./components/Loader";
+import { ProgressData } from "./lib/fastingSuggestions";
 
 const ProfileForm = lazy(() => import("./pages/ProfileForm"));
 const HydrationReminder = lazy(() => import("./pages/HydrationReminder"));
@@ -18,11 +19,6 @@ const LandingPage = lazy(() => import("./pages/Home"));
 const SignUpPage = lazy(() => import("./sign-up/[[...index]]"));
 const SignInPage = lazy(() => import("./sign-in/[[...index]]"));
 const Navigation = lazy(() => import('./components/Navigation'));
-
-interface ProgressData {
-    date: string;
-    fastingHours: number;
-}
 
 export default function App() {
     const { user, isLoaded, isSignedIn } = useUser();
@@ -73,6 +69,7 @@ export default function App() {
         const newSession: ProgressData = {
             date: new Date().toISOString().split('T')[0],
             fastingHours: duration / 3600,
+            fastingMinutes: duration
         };
 
         try {
