@@ -15,6 +15,7 @@ import {
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { db } from '../firebase';
 import { generateStressQuestions, getStressManagementSuggestions, StressQuestion } from '../lib/stressFeedback';
+import Loader from './Loader';
 
 ChartJS.register(
     CategoryScale,
@@ -306,7 +307,10 @@ const StressChecker: React.FC = () => {
                             >
                                 <h2 className="text-2xl font-semibold mb-4">Stress Management Suggestions:</h2>
                                 {isLoading ? (
-                                    <p className="text-center text-gray-600">Generating suggestions...</p>
+                                    <>
+                                        <Loader />
+                                        <p className="text-center text-gray-600">Generating suggestions...</p>
+                                    </>
                                 ) : (
                                     <motion.ul 
                                         className="list-disc pl-6"

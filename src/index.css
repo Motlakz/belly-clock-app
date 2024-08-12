@@ -5,3 +5,53 @@
 .highlight {
   text-shadow: 1px 1px 1px #000;
 }
+
+.dot {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background-color: #d7d7d7;
+  animation: bounce 1.5s infinite ease-in-out;
+}
+
+.dot1 {
+  background-color: rgb(216, 168, 250);
+  animation-delay: -0.3s;
+}
+
+.dot2 {
+  background-color: rgb(127, 247, 247);
+  animation-delay: -0.15s;
+}
+
+.dot3 {
+  background-color: rgb(252, 159, 159);
+}
+
+@keyframes loader {
+  0% {
+      opacity: 0;
+      transform: scale(0.5);
+  }
+  20% {
+      opacity: 1;
+      transform: scale(1);
+  }
+  40% {
+      opacity: 0;
+      transform: scale(0.5);
+  }
+  100% {
+      opacity: 0;
+      transform: scale(0.5);
+  }
+}
+
+@keyframes bounce {
+  0%, 80%, 100% {
+      transform: scale(0);
+  }
+  40% {
+      transform: scale(1);
+  }
+}

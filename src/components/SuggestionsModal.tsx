@@ -51,7 +51,7 @@ const SuggestionsModal: React.FC<SuggestionsModalProps> = ({ isOpen, onClose, ge
                     >
                         <h2 className="text-2xl font-bold mb-4">Your Fasting Suggestions</h2>
                         {loading && (
-                            <div className="mb-4">
+                            <div className="mb-4 flex flex-col items-center justify-center">
                                 <p>Loading suggestions...</p>
                                 <div className="mt-2 w-8 h-8 border-4 border-t-cyan-400 border-r-pink-400 border-b-orange-400 border-l-purple-500 rounded-full animate-spin"></div>
                             </div>

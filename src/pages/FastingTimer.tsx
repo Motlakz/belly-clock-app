@@ -263,14 +263,14 @@ const FastingTimer: React.FC<FastingTimerProps> = ({ userId, onFastingSessionEnd
     const progress = (time / duration) * 100;
 
     return (
-        <div className="min-h-screen bg-gradient-to-r from-teal-600 to-cyan-500 flex flex-col md:flex-row p-4">
+        <div className="min-h-screen pt-20 bg-gradient-to-r from-teal-600 to-cyan-500 flex flex-col justify-center items-center md:flex-row p-4">
             {/* Clock Side */}
-            <div className="w-full md:w-1/2 flex items-center justify-center">
+            <div className="w-full flex justify-center max-w-xl">
                 <motion.div 
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.5 }}
-                    className="w-full max-w-sm mt-20 sm:max-w-md bg-white bg-opacity-20 backdrop-blur-lg rounded-xl shadow-lg p-4 sm:p-6 md:p-8 border border-white border-opacity-30"
+                    className="w-full max-w-sm sm:max-w-md bg-white bg-opacity-20 backdrop-blur-lg rounded-xl shadow-lg p-4 sm:p-6 md:p-8 border border-white border-opacity-30"
                 >
                     <motion.h2 
                         className="text-2xl sm:text-3xl font-bold mb-4 sm:mb-6 text-center text-slate-700"
@@ -369,7 +369,7 @@ const FastingTimer: React.FC<FastingTimerProps> = ({ userId, onFastingSessionEnd
             </div>
 
             {/* Schedule Side */}
-            <div className="w-full md:w-1/2 flex items-center justify-center">
+            <div className="w-full max-w-xl">
                 <motion.div
                     initial={{ opacity: 0, x: 20 }}
                     animate={{ opacity: 1, x: 0 }}
@@ -386,7 +386,7 @@ const FastingTimer: React.FC<FastingTimerProps> = ({ userId, onFastingSessionEnd
                             animate={{ opacity: 1, y: 0 }}
                             exit={{ opacity: 0, y: -10 }}
                             transition={{ duration: 0.2 }}
-                            className="max-h-96 overflow-y-auto"
+                            className="max-h-[70vh] overflow-y-auto"
                         >
                             <p className="mb-4 text-white">Maximize your fasting benefits with our AI-generated personalized schedule.</p>
                             <button

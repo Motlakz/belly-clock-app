@@ -10,6 +10,8 @@ import fastingImage from '../assets/fasting.png';
 import hydrationImage from '../assets/hydration.png';
 import progressImage from '../assets/progress.png';
 import journalImage from '../assets/journal.png';
+import AppScreenLoading from '../components/AppScreen';
+import Loader from '../components/Loader';
 
 interface ProgressData {
     date: string;
@@ -104,7 +106,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ progressData }) => {
             </article>
             
             <div className="grid sm:grid-cols-2 grid-cols-1 gap-8">
-                <Suspense fallback={<div>Loading...</div>}>
+                <Suspense fallback={<div><AppScreenLoading /></div>}>
                     <div>
                         <Card
                             title="Fasting Timer"
@@ -147,7 +149,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ progressData }) => {
                 </Suspense>
             </div>
 
-            <Suspense fallback={<div>Loading...</div>}>
+            <Suspense fallback={<div><Loader /></div>}>
                 <SuggestionsModal
                     isOpen={isSuggestionsModalOpen}
                     onClose={() => setIsSuggestionsModalOpen(false)}

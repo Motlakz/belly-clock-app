@@ -4,10 +4,10 @@ import { useEffect, useState, useCallback, lazy, Suspense } from "react";
 import { useUser } from "@clerk/clerk-react";
 import { db } from './firebase';
 import { collection, getDocs, addDoc } from 'firebase/firestore';
-import LoadingScreen from "./components/LoadingScreen";
 import Modal from "./components/StressModal";
 import StressChecker from "./components/StressChecker";
 import DashboardPage from "./pages/Dashboard";
+import Loader from "./components/Loader";
 
 const ProfileForm = lazy(() => import("./pages/ProfileForm"));
 const HydrationReminder = lazy(() => import("./pages/HydrationReminder"));
@@ -84,12 +84,12 @@ export default function App() {
     };
 
     if (!isLoaded || !isAppReady) {
-        return <LoadingScreen />;
+        return <Loader />;
     }
 
     return (
         <Router>
-            <Suspense fallback={<LoadingScreen />}>
+            <Suspense fallback={<Loader />}>
 
                 <Navigation openStressChecker={openStressChecker} />
                 <Modal isOpen={isStressCheckerOpen} onClose={closeStressChecker}>

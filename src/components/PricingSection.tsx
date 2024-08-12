@@ -42,7 +42,7 @@ const PricingCard: React.FC<PricingCardProps> = ({ title, price, features, isPop
         whileTap={{ scale: 0.95 }}
         onClick={onSelectPlan}
         >
-        Select Plan
+        Coming Soon
         </motion.button>
     </motion.div>
     );

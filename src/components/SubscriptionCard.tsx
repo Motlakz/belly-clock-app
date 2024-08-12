@@ -37,7 +37,7 @@ export function SubscriptionCard({ title, price, features, isSelected, onClick }
                 onClick={onClick}
                 whileTap={{ scale: 0.95 }}
             >
-                {isSelected ? 'Current Plan' : 'Select Plan'}
+                {isSelected ? 'Current Plan' : 'Coming Soon'}
             </motion.button>
         </motion.div>
     );
