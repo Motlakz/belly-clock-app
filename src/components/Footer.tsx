@@ -1,5 +1,6 @@
 import { motion } from 'framer-motion';
 import { Link } from 'react-scroll';
+import { Link as RouterLink } from 'react-router-dom';
 import { FaFacebook, FaTwitter, FaLinkedinIn, FaGithub } from 'react-icons/fa';
 
 const Footer = () => {
@@ -32,8 +33,8 @@ const Footer = () => {
         {
             title: 'Legal',
             links: [
-                { name: 'Terms', to: 'terms' },
-                { name: 'Privacy', to: 'privacy' },
+                { name: 'Terms', to: '/termsofservice', isExternal: true },
+                { name: 'Privacy', to: '/privacy', isExternal: true },
                 { name: 'Cookies', to: 'cookies' },
             ]
         }
@@ -56,14 +57,23 @@ const Footer = () => {
                             <ul className="space-y-2">
                                 {section.links.map((link) => (
                                     <li key={link.name}>
-                                        <Link
-                                            to={link.to}
-                                            smooth={true}
-                                            duration={500}
-                                            className="hover:text-indigo-600 transition-colors duration-300 cursor-pointer"
-                                        >
-                                            {link.name}
-                                        </Link>
+                                        {link.isExternal ? (
+                                            <RouterLink
+                                                to={link.to}
+                                                className="hover:text-indigo-600 transition-colors duration-300 cursor-pointer"
+                                            >
+                                                {link.name}
+                                            </RouterLink>
+                                        ) : (
+                                            <Link
+                                                to={link.to}
+                                                smooth={true}
+                                                duration={500}
+                                                className="hover:text-indigo-600 transition-colors duration-300 cursor-pointer"
+                                            >
+                                                {link.name}
+                                            </Link>
+                                        )}
                                     </li>
                                 ))}
                             </ul>

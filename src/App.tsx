@@ -9,6 +9,8 @@ import StressChecker from "./components/StressChecker";
 import DashboardPage from "./pages/Dashboard";
 import Loader from "./components/Loader";
 import { ProgressData } from "./lib/fastingSuggestions";
+import TermsOfService from "./pages/TermsOfService";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
 
 const ProfileForm = lazy(() => import("./pages/ProfileForm"));
 const HydrationReminder = lazy(() => import("./pages/HydrationReminder"));
@@ -124,6 +126,8 @@ export default function App() {
                         path="/journal" 
                         element={isSignedIn ? <FastingJournal /> : <Navigate to="/" />} 
                     />
+                    <Route path="/termsofservice" element={<TermsOfService />} />
+                    <Route path="/privacy" element={<PrivacyPolicy />} />
                 </Routes>
             </Suspense>
         </Router>
