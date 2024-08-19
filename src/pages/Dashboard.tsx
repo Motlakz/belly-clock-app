@@ -104,7 +104,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ progressData }) => {
                 <Suspense fallback={<div><AppScreenLoading /></div>}>
                     <div>
                         <Card
-                            title="Fasting Timer"
+                            title="Intermittent Fasting Calculator"
                             description="Track your fasting sessions and manage your time effectively."
                             link="/fasting"
                             imageUrl={fastingImage}

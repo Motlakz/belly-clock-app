@@ -89,8 +89,8 @@ const LandingPage: React.FC = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8 }}
         >
-          <h1 className="sm:text-6xl text-4xl font-bold mb-6 text-shadow-lg">Free Intermittent Fasting Calculator, <span className="highlight text-cyan-400 border-b-cyan-400 border-b-8">with an AI twist</span></h1>
-          <p className="sm:text-2xl mb-8 text-shadow">Optimize Your Weight Loss and Health with Precision Fasting Tools and your dedicated AI assistant.</p>
+          <h1 className="sm:text-6xl text-4xl font-bold mb-6 text-shadow-lg">Intermittent Fasting Calculator, <span className="highlight text-blue-400 border-b-blue-400 border-b-8">with an AI twist</span></h1>
+          <p className="sm:text-2xl mb-8 text-shadow">Optimize your weight loss and health with precision fasting tools and your dedicated AI companion.</p>
           <InteractiveButton />
         </motion.div>
       </header>

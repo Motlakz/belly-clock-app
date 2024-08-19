@@ -1,0 +1,26 @@
+User-agent: *
+Allow: /
+Allow: /sign-up
+Allow: /sign-in
+Allow: /about
+Allow: /tools
+Allow: /blog
+Allow: /newsletter
+Allow: /events
+Allow: /help
+Allow: /termsofservice
+Allow: /privacy
+
+Disallow: /profile
+Disallow: /dashboard
+Disallow: /fasting
+Disallow: /journal
+Disallow: /hydration
+Disallow: /progress
+Disallow: /settings
+Disallow: /api/
+Disallow: /admin/
+
+Sitemap: https://fastingcalculatorai.com/sitemap.xml
+
+Crawl-delay: 10

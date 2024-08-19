@@ -29,19 +29,16 @@ export async function generateFastingSuggestions(
   currentFastingType: FastingType,
   progressData: ProgressData[]
 ): Promise<string[]> {
-  const basicSuggestions = generateBasicSuggestions(profile, history, currentFastingType, progressData);
-  const geminiSuggestions = await getGeminiSuggestions(profile, history, currentFastingType, progressData);
-
-  const prioritizedSuggestions = [
-    ...geminiSuggestions,
-    ...basicSuggestions.slice(0, 2),
-    ...basicSuggestions.slice(2)
-  ];
-
-  return [...new Set(prioritizedSuggestions)];
+  try {
+    const geminiSuggestions = await getGeminiSuggestions(profile, history, currentFastingType, progressData);
+    return [...new Set(geminiSuggestions)];
+  } catch (error) {
+    console.error('Failed to get AI suggestions:', error);
+    return generateBasicSuggestions(profile, history, currentFastingType, progressData);
+  }
 }
 
-export function generateBasicSuggestions(
+function generateBasicSuggestions(
   profile: UserProfile,
   history: FastingHistory,
   currentFastingType: FastingType,
