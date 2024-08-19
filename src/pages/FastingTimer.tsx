@@ -294,7 +294,15 @@ const FastingTimer: React.FC<FastingTimerProps> = ({ userId, onFastingSessionEnd
 
             // Save the optimized schedule to Firestore
             const userDocRef = doc(db, 'users', userId);
-            await setDoc(userDocRef, { optimizedSchedule: schedule }, { merge: true });
+            await setDoc(userDocRef, { 
+                optimizedSchedule: schedule,
+                fastingPreferences: {
+                    preferredMethod: selectedFastingType.name,
+                    customFastingWindow: selectedFastingType.name === 'Custom' 
+                        ? `${customHours.toString().padStart(2, '0')}:${customMinutes.toString().padStart(2, '0')}`
+                        : null
+                }
+            }, { merge: true });
         } catch (error) {
             console.error('Error generating optimized schedule:', error);
             setOptimizedSchedule('Failed to generate optimized schedule. Please try again later.');
@@ -304,17 +312,17 @@ const FastingTimer: React.FC<FastingTimerProps> = ({ userId, onFastingSessionEnd
     const progress = (time / duration) * 100;
 
     return (
-        <div className="min-h-screen pt-20 bg-gradient-to-r from-teal-600 to-cyan-500 flex flex-col justify-center items-center md:flex-row p-4">
+        <div className="min-h-screen pt-20 bg-gradient-to-r from-teal-600 to-cyan-500 flex flex-col justify-center items-center md:flex-row p-4 space-y-8 md:space-y-0 md:space-x-8">
             {/* Clock Side */}
-            <div className="w-full flex justify-center max-w-xl">
-                <motion.div 
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.5 }}
-                    className="w-full max-w-sm sm:max-w-md bg-white bg-opacity-20 backdrop-blur-lg rounded-xl shadow-lg p-4 sm:p-6 md:p-8 border border-white border-opacity-30"
-                >
+            <motion.div 
+                className="w-full max-w-xl"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5 }}
+            >
+                <div className="bg-white bg-opacity-20 backdrop-blur-lg rounded-xl shadow-lg p-6 md:p-8 border border-white border-opacity-30">
                     <motion.h2 
-                        className="text-2xl sm:text-3xl font-bold mb-4 sm:mb-6 text-center text-slate-700"
+                        className="text-3xl font-bold mb-6 text-center text-white"
                         initial={{ y: -20 }}
                         animate={{ y: 0 }}
                         transition={{ delay: 0.2, type: "spring", stiffness: 120 }}
@@ -322,7 +330,7 @@ const FastingTimer: React.FC<FastingTimerProps> = ({ userId, onFastingSessionEnd
                         Belly Clock
                     </motion.h2>
                     <motion.div 
-                        className="w-48 h-48 sm:w-56 sm:h-56 md:w-64 md:h-64 rounded-full flex justify-center items-center mx-auto mb-6 sm:mb-8 relative"
+                        className="w-64 h-64 rounded-full flex justify-center items-center mx-auto mb-8 relative"
                         style={{ 
                             background: `conic-gradient(#06b6d4 ${progress}%, rgba(224, 242, 254, 0.3) ${progress}% 100%)` 
                         }}
@@ -337,7 +345,7 @@ const FastingTimer: React.FC<FastingTimerProps> = ({ userId, onFastingSessionEnd
                             transition={{ delay: 0.3 }}
                         />
                         <motion.div 
-                            className="relative flex justify-center items-center text-2xl sm:text-3xl font-bold text-slate-500"
+                            className="relative flex justify-center items-center text-4xl font-bold text-slate-700"
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             transition={{ delay: 0.3 }}
@@ -349,9 +357,7 @@ const FastingTimer: React.FC<FastingTimerProps> = ({ userId, onFastingSessionEnd
                         <CustomSelect
                             options={fastingTypes}
                             selectedOption={selectedFastingType}
-                            onSelect={(option) => {
-                                setSelectedFastingType(option);
-                            }}
+                            onSelect={setSelectedFastingType}
                         />
                         {selectedFastingType.name === 'Custom' && (
                             <div className="flex space-x-2">
@@ -359,9 +365,7 @@ const FastingTimer: React.FC<FastingTimerProps> = ({ userId, onFastingSessionEnd
                                     type="number" 
                                     className="w-1/2 p-2 rounded bg-cyan-800/30 text-white border border-white border-opacity-30 placeholder-white placeholder-opacity-70"
                                     value={customHours}
-                                    onChange={(e) => {
-                                        setCustomHours(Number(e.target.value));
-                                    }}
+                                    onChange={(e) => setCustomHours(Number(e.target.value))}
                                     placeholder="Hours"
                                     min="0"
                                     max="23"
@@ -370,9 +374,7 @@ const FastingTimer: React.FC<FastingTimerProps> = ({ userId, onFastingSessionEnd
                                     type="number" 
                                     className="w-1/2 p-2 rounded bg-cyan-800/30 text-white border border-white border-opacity-30 placeholder-white placeholder-opacity-70"
                                     value={customMinutes}
-                                    onChange={(e) => {
-                                        setCustomMinutes(Number(e.target.value));
-                                    }}
+                                    onChange={(e) => setCustomMinutes(Number(e.target.value))}
                                     placeholder="Minutes"
                                     min="0"
                                     max="59"
@@ -381,9 +383,9 @@ const FastingTimer: React.FC<FastingTimerProps> = ({ userId, onFastingSessionEnd
                         )}
                         <AnimatePresence mode="wait">
                             <motion.button 
-                                key={isActive ? 'click' : 'start'}
+                                key={isActive ? 'pause' : 'start'}
                                 onClick={toggleTimer}
-                                className="w-full px-4 py-2 bg-cyan-700 bg-opacity-80 text-white rounded-lg hover:bg-opacity-100 transition-colors backdrop-blur-sm"
+                                className="w-full px-4 py-3 bg-cyan-700 text-white rounded-lg hover:bg-opacity-90 transition-colors backdrop-blur-sm text-lg font-semibold"
                                 whileHover={{ scale: 1.05 }}
                                 whileTap={{ scale: 0.95 }}
                                 initial={{ opacity: 0, y: 20 }}
@@ -396,7 +398,7 @@ const FastingTimer: React.FC<FastingTimerProps> = ({ userId, onFastingSessionEnd
                         </AnimatePresence>
                         <motion.button 
                             onClick={resetTimer}
-                            className="w-full px-4 py-2 bg-yellow-500 bg-opacity-80 text-white rounded-lg hover:bg-opacity-100 transition-colors backdrop-blur-sm"
+                            className="w-full px-4 py-3 bg-yellow-500 text-white rounded-lg hover:bg-opacity-90 transition-colors backdrop-blur-sm text-lg font-semibold"
                             whileHover={{ scale: 1.05 }}
                             whileTap={{ scale: 0.95 }}
                             initial={{ opacity: 0, y: 20 }}
@@ -406,59 +408,52 @@ const FastingTimer: React.FC<FastingTimerProps> = ({ userId, onFastingSessionEnd
                             Reset
                         </motion.button>
                     </div>
-                </motion.div>
-            </div>
+                </div>
+            </motion.div>
 
             {/* Schedule Side */}
-            <div className="w-full max-w-xl">
-                <motion.div
-                    initial={{ opacity: 0, x: 20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ duration: 0.5, delay: 0.2 }}
-                    className="w-full max-w-sm sm:max-w-md bg-white bg-opacity-20 backdrop-blur-lg rounded-xl shadow-lg p-4 sm:p-6 md:p-8 border border-white border-opacity-30"
-                >
+            <motion.div
+                className="w-full max-w-xl"
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.5, delay: 0.2 }}
+            >
+                <div className="bg-white bg-opacity-20 backdrop-blur-lg rounded-xl shadow-lg p-6 md:p-8 border border-white border-opacity-30">
                     <div className="flex justify-between items-center cursor-pointer mb-4" onClick={() => setShowOptimizerPanel(!showOptimizerPanel)}>
-                        <h3 className="text-lg font-semibold text-white">🚀 Fasting Time Optimizer</h3>
-                        {showOptimizerPanel ? <ChevronUp size={20} color="white" /> : <ChevronDown size={20} color="white" />}
+                        <h3 className="text-xl font-semibold text-white">🚀 Fasting Time Optimizer</h3>
+                        {showOptimizerPanel ? <ChevronUp size={24} color="white" /> : <ChevronDown size={24} color="white" />}
                     </div>
-                    <p className="mb-4 text-white">Maximize your fasting benefits with our AI-generated personalized schedule.</p>
-                    {showOptimizerPanel && (
-                        <motion.div
-                            initial={{ opacity: 0, y: -10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, y: -10 }}
-                            transition={{ duration: 0.2 }}
-                            className="max-h-[70vh] overflow-y-auto"
-                        >
-                            <button
-                                onClick={generateOptimizedSchedule}
-                                className="w-full bg-cyan-400/50 border mb-4 text-white px-4 py-2 rounded-lg hover:bg-opacity-90 transition-colors"
-                                >
-                                Regenerate Schedule
-                            </button>
-                            {optimizedSchedule ? (
-                                <div>
-                                    <ReactMarkdown className="text-slate-700 prose prose-invert">
-                                        {optimizedSchedule}
-                                    </ReactMarkdown>
-                                </div>
-                            ) : (
+                    <p className="mb-4 text-white text-opacity-90">Maximize your fasting benefits with our AI-generated personalized schedule.</p>
+                    <AnimatePresence>
+                        {showOptimizerPanel && (
+                            <motion.div
+                                initial={{ opacity: 0, height: 0 }}
+                                animate={{ opacity: 1, height: 'auto' }}
+                                exit={{ opacity: 0, height: 0 }}
+                                transition={{ duration: 0.3 }}
+                                className="overflow-hidden max-h-[75vh] p-2 overflow-y-auto"
+                            >
                                 <button
                                     onClick={generateOptimizedSchedule}
-                                    className="bg-white text-teal-500 px-4 py-2 rounded-lg hover:bg-opacity-90 transition-colors"
+                                    className="w-full bg-cyan-400 border mb-4 text-white px-4 py-3 rounded-lg hover:bg-opacity-90 transition-colors text-lg font-semibold"
                                 >
                                     Generate AI Optimized Schedule
                                 </button>
-                            )}
-                        </motion.div>
-                    )}
-                </motion.div>
-            </div>
-
+                                {optimizedSchedule && (
+                                    <div className="bg-white bg-opacity-10 rounded-lg p-4 mt-4">
+                                        <ReactMarkdown className="text-white prose prose-invert max-w-none">
+                                            {optimizedSchedule}
+                                        </ReactMarkdown>
+                                    </div>
+                                )}
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
+                </div>
+            </motion.div>
             <audio ref={audioRef} />
         </div>
     );
 };
 
 export default FastingTimer;
-
